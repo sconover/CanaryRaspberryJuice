@@ -1,0 +1,2 @@
+- maven
+- look into https://travis-ci.org/
