@@ -8,3 +8,23 @@
   ...canarymod submodule?
 
   git submodule add git@github.com:sconover/CanaryMod.git submodules/CanaryMod
+
+- integration test the mcpi stuff
+  - iterate by running tests...and watching them run in-world
+    ...reload the plugin on the fly?
+    ...print the test name in chat
+    ...print each command?
+    shouldn't need to disconnect client
+      ...need to use plugin reloading capability
+      ...start server in background, reload plugin at the beginning of each test run
+        small socket server that responds to a single command (reloadPlugin name)
+          ...use all the plugin reloading capabilities (just avoid jars)
+          print in-game
+      only reload if the hash of the file contents is different (and, log either way)
+
+  - slow them down or speed them up
+
+  - later: examine the world files via NBT
+    ...canonical AT's for any mcpi plugin?
+
+- ...in-game debugger...step through commands and watch what happens. control from console, in-game.
