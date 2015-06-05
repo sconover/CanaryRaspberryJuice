@@ -1,0 +1,3 @@
+[submodule "submodules/CanaryMod"]
+	path = submodules/CanaryMod
+	url = git@github.com:sconover/CanaryMod.git

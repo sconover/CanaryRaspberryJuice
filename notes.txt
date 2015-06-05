@@ -4,3 +4,7 @@
 - running canarymod as a config...
   net.canarymod.Main
   -Djava.awt.headless=true
+
+  ...canarymod submodule?
+
+  git submodule add git@github.com:sconover/CanaryMod.git submodules/CanaryMod
