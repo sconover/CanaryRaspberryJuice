@@ -10,6 +10,11 @@
   <name>canaryraspberryjuice</name>
   <url>http://maven.apache.org</url>
 
+  <properties>
+    <canarylib.version>1.2.0</canarylib.version>
+    <canarymod.minecraft.version>1.8.0</canarymod.minecraft.version>
+  </properties>
+
   <build>
     <directory>target</directory>
     <outputDirectory>target/classes</outputDirectory>
@@ -51,6 +56,44 @@
           <value>${version}</value>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.7</version>
+        <executions>
+          <execution>
+            <id>download-canarymod-source-from-github</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <mkdir dir="${project.build.directory}/sources"/>
+                <get src="https://github.com/CanaryModTeam/CanaryMod/archive/${canarymod.minecraft.version}-${canarylib.version}.zip"
+                    dest="${project.build.directory}/sources"
+                    verbose="true"
+                    usetimestamp="true"/>
+                <unzip src="${project.build.directory}/sources/${canarymod.minecraft.version}-${canarylib.version}.zip"
+                    dest="${project.build.directory}/sources"/>
+              </tasks>
+            </configuration>
+          </execution>
+          <execution>
+            <id>make-server-root-dir</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <mkdir dir="${project.build.directory}/server-root"/>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -58,7 +101,7 @@
     <dependency>
       <groupId>net.canarymod</groupId>
       <artifactId>CanaryLib</artifactId>
-      <version>1.2.0</version>
+      <version>${canarylib.version}</version>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
@@ -75,7 +118,7 @@
     <dependency>
       <groupId>net.canarymod</groupId>
       <artifactId>CanaryMod</artifactId>
-      <version>1.8.0-1.2.0</version>
+      <version>${canarymod.minecraft.version}-${canarylib.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

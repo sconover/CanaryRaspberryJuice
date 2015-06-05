@@ -1,2 +1,6 @@
 - maven
+  - run "mvn dependency:sources" to get dependency jar sources
 - look into https://travis-ci.org/
+- running canarymod as a config...
+  net.canarymod.Main
+  -Djava.awt.headless=true
