@@ -27,44 +27,52 @@ import net.canarymod.plugin.lifecycle.PluginLifecycleFactory;
 import net.minecraft.server.MinecraftServer;
 import net.visualillusionsent.utils.PropertiesFile;
 import net.visualillusionsent.utils.UtilityException;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
-import org.junit.Test;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
-public class IntegrationTest {
-  @Test
-  public void runServer() throws Exception {
-    //check current working dir and make sure it's not the project root
+public class TestCanaryModServer {
+  public static void main(String[] args) {
+    try {
+      if (!new File(System.getProperty("user.dir")).getName().equals("server-root")) {
+        throw new RuntimeException("working directory should be target/server-root");
+      }
 
-    System.setProperty("java.awt.headless", "true");
-    PluginLifecycleFactory.registerLifecycle("java", AutoReloadingPluginLifecycle.class);
+      String projectRootDir = new File("../../").getAbsolutePath();
 
-    TestPluginDescriptor pluginDescriptor =
-        new TestPluginDescriptor(
-            new File("../../classes/production/CanaryRaspberryJuice").getAbsolutePath(),
-            new LinkedHashMap<String, String>(){{
-              put("main-class", "mctest.hello.HelloPlugin");
-              put("name", "HelloPlugin");
-              put("author", "Steve Conover");
-              put("version", "0.0.1");
-              // put("enable-early", "true");
-            }});
+      FileUtils.copyDirectory(
+          new File(projectRootDir, "src/test/resources/server-overlay"),
+          new File(projectRootDir, "target/server-root"));
 
-    TestPluginManager pluginManager = new TestPluginManager();
-    pluginManager.putPluginDescriptor(pluginDescriptor);
+      System.setProperty("java.awt.headless", "true");
+      PluginLifecycleFactory.registerLifecycle("java", AutoReloadingPluginLifecycle.class);
 
-    MinecraftServer minecraftServer = Main.doMain(new String[] {}, pluginManager);
-    while (!minecraftServer.isRunning()) {
-      System.out.printf("starting up, i think");
-      Thread.sleep(1000);
-    }
-    //PluginLifecycleFactory.createLifecycle(new TestPluginDescriptor(null, null));
-    while (minecraftServer.isRunning()) {
+      TestPluginDescriptor pluginDescriptor =
+          new TestPluginDescriptor(
+              new File(projectRootDir, "classes/production/CanaryRaspberryJuice").getAbsolutePath(),
+              new LinkedHashMap<String, String>(){{
+                put("main-class", "mctest.hello.HelloPlugin");
+                put("name", "HelloPlugin");
+                put("author", "Steve Conover");
+                put("version", "0.0.1");
+                // put("enable-early", "true");
+              }});
 
-      // System.out.printf("running, i think");
-      Thread.sleep(1000);
+      TestPluginManager pluginManager = new TestPluginManager();
+      pluginManager.putPluginDescriptor(pluginDescriptor);
+
+      MinecraftServer minecraftServer = Main.doMain(new String[] {}, pluginManager);
+      while (!minecraftServer.isRunning()) {
+        System.out.printf("starting up");
+        Thread.sleep(100);
+      }
+      while (minecraftServer.isRunning()) {
+        Thread.sleep(100);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
     }
   }
 

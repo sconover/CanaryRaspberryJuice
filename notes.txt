@@ -27,4 +27,6 @@
   - later: examine the world files via NBT
     ...canonical AT's for any mcpi plugin?
 
+- test game config - should be in creative mode and login timeout is huge
+
 - ...in-game debugger...step through commands and watch what happens. control from console, in-game.
