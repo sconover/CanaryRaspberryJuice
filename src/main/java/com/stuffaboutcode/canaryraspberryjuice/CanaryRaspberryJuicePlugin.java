@@ -3,16 +3,12 @@ package com.stuffaboutcode.canaryraspberryjuice;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-
 import net.canarymod.Canary;
+import net.canarymod.api.Server;
+import net.canarymod.api.entity.living.humanoid.Player;
+import net.canarymod.api.world.World;
+import net.canarymod.api.world.position.Location;
 import net.canarymod.plugin.Plugin;
-import net.canarymod.api.*;
-import net.canarymod.api.world.*;
-import net.canarymod.api.world.position.*;
-import net.canarymod.api.entity.living.humanoid.*;
-
-import com.stuffaboutcode.canaryraspberryjuice.RemoteSession;
-import com.stuffaboutcode.canaryraspberryjuice.ServerListenerThread;
 
 public class CanaryRaspberryJuicePlugin extends Plugin {
 	
@@ -24,7 +20,7 @@ public class CanaryRaspberryJuicePlugin extends Plugin {
 
 	@Override
 	public boolean enable() {
-		getLogman().info("Enabling " + getName() + " Version " + getVersion()); 
+		getLogman().info("Enabling " + getName() + " Version " + getVersion());
 		getLogman().info("Authored by "+ getAuthor());
 		
 		//load configuration

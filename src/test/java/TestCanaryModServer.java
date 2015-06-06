@@ -4,11 +4,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,7 +52,7 @@ public class TestCanaryModServer {
       System.setProperty("java.awt.headless", "true");
       PluginLifecycleFactory.registerLifecycle("java", AutoReloadingPluginLifecycle.class);
 
-      TestPluginDescriptor pluginDescriptor =
+      TestPluginDescriptor helloPluginDescriptor =
           new TestPluginDescriptor(
               new File(projectRootDir, "classes/production/CanaryRaspberryJuice").getAbsolutePath(),
               new LinkedHashMap<String, String>(){{
@@ -57,11 +60,21 @@ public class TestCanaryModServer {
                 put("name", "HelloPlugin");
                 put("author", "Steve Conover");
                 put("version", "0.0.1");
-                // put("enable-early", "true");
+              }});
+
+      TestPluginDescriptor raspberryJuicePluginDescriptor =
+          new TestPluginDescriptor(
+              new File(projectRootDir, "classes/production/CanaryRaspberryJuice").getAbsolutePath(),
+              new LinkedHashMap<String, String>(){{
+                put("main-class", "com.stuffaboutcode.canaryraspberryjuice.CanaryRaspberryJuicePlugin");
+                put("name", "CanaryRaspberryJuicePlugin");
+                put("author", "Martin OHanlon");
+                put("version", "1.3");
               }});
 
       TestPluginManager pluginManager = new TestPluginManager();
-      pluginManager.putPluginDescriptor(pluginDescriptor);
+      pluginManager.putPluginDescriptor(helloPluginDescriptor);
+      pluginManager.putPluginDescriptor(raspberryJuicePluginDescriptor);
 
       MinecraftServer minecraftServer = Main.doMain(new String[] {}, pluginManager);
       while (!minecraftServer.isRunning()) {
@@ -160,15 +173,23 @@ public class TestCanaryModServer {
                 path.getFileSystem().newWatchService();
 
             // see http://stackoverflow.com/questions/9588737/is-java-7-watchservice-slow-for-anyone-else
-            path.register(watchService,
-                new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_MODIFY},
-                SensitivityWatchEventModifier.HIGH);
+            Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+              @Override
+              public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                dir.register(watchService,
+                    new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_MODIFY},
+                    SensitivityWatchEventModifier.HIGH);
+                return FileVisitResult.CONTINUE;
+              }
+            });
 
             while (!Thread.currentThread().isInterrupted()) {
               WatchKey key = watchService.poll(50, TimeUnit.MILLISECONDS);
               if (key != null && !key.pollEvents().isEmpty()) {
+                key.reset();
                 System.out.println("Plugin change detected, auto-reloading...");
                 System.out.flush();
+                Thread.sleep(100);
                 disable();
                 unload();
                 load();
