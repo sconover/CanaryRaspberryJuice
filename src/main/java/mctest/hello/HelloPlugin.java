@@ -4,7 +4,7 @@ import net.canarymod.plugin.Plugin;
 
 public class HelloPlugin extends Plugin {
   @Override public boolean enable() {
-    getLogman().info("Enabling "+ getName() + " Version " + getVersion());
+    getLogman().info("17 Enabling "+ getName() + " Version " + getVersion());
     getLogman().info("Authored by "+getAuthor());
     return true;
   }

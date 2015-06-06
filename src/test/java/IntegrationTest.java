@@ -1,10 +1,18 @@
+import com.sun.nio.file.SensitivityWatchEventModifier;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import net.canarymod.Main;
 import net.canarymod.exceptions.InvalidPluginException;
 import net.canarymod.exceptions.PluginLoadFailedException;
@@ -14,7 +22,6 @@ import net.canarymod.plugin.PluginDescriptor;
 import net.canarymod.plugin.PluginLifecycle;
 import net.canarymod.plugin.PluginManager;
 import net.canarymod.plugin.PluginState;
-import net.canarymod.plugin.lifecycle.JavaPluginLifecycle;
 import net.canarymod.plugin.lifecycle.PluginLifecycleBase;
 import net.canarymod.plugin.lifecycle.PluginLifecycleFactory;
 import net.minecraft.server.MinecraftServer;
@@ -23,17 +30,20 @@ import net.visualillusionsent.utils.UtilityException;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+
 public class IntegrationTest {
   @Test
   public void runServer() throws Exception {
     //check current working dir and make sure it's not the project root
 
     System.setProperty("java.awt.headless", "true");
-    PluginLifecycleFactory.registerLifecycle("java", JavaPluginLifecycle.class);
+    PluginLifecycleFactory.registerLifecycle("java", AutoReloadingPluginLifecycle.class);
 
     TestPluginDescriptor pluginDescriptor =
         new TestPluginDescriptor(
-            new File("../../classes/production").getAbsolutePath(),
+            new File("../../classes/production/CanaryRaspberryJuice").getAbsolutePath(),
             new LinkedHashMap<String, String>(){{
               put("main-class", "mctest.hello.HelloPlugin");
               put("name", "HelloPlugin");
@@ -58,9 +68,122 @@ public class IntegrationTest {
     }
   }
 
-  // TODO: use a DefaultPluginManager, but override scanForPLugins, and reflectively add plugins to the (private) Map
+  public static class Reloader extends ClassLoader {
+
+    private final String dir;
+    private final ClassLoader parentClassLoader;
+
+    public Reloader(String dir, ClassLoader parentClassLoader) {
+      this.dir = dir;
+      this.parentClassLoader = parentClassLoader;
+    }
+
+    @Override
+    public Class<?> loadClass(String className) throws ClassNotFoundException {
+      if (classFileFor(className).exists()) {
+        return findClass(className);
+      } else {
+        return parentClassLoader.loadClass(className);
+      }
+    }
+
+    @Override
+    public Class<?> findClass(String className) {
+      try {
+        byte[] bytes = loadClassData(className);
+        return defineClass(className, bytes, 0, bytes.length);
+      } catch (IOException ioe) {
+        try {
+          return super.loadClass(className);
+        } catch (ClassNotFoundException ignore) { }
+        ioe.printStackTrace(System.out);
+        return null;
+      }
+    }
+
+    private byte[] loadClassData(String className) throws IOException {
+      File f = classFileFor(className);
+      int size = (int) f.length();
+      byte buff[] = new byte[size];
+      FileInputStream fis = new FileInputStream(f);
+      DataInputStream dis = new DataInputStream(fis);
+      dis.readFully(buff);
+      dis.close();
+      return buff;
+    }
+
+    private File classFileFor(String className) {
+      return new File(dir, className.replaceAll("\\.", "/") + ".class");
+    }
+  }
+
+  public static class AutoReloadingPluginLifecycle extends PluginLifecycleBase {
+    private Thread watchThread;
+    private ClassLoader ploader;
+
+    public AutoReloadingPluginLifecycle(PluginDescriptor desc) {
+      super(desc);
+
+      this.watchThread = null;
+    }
+
+    @Override protected void _load() throws PluginLoadFailedException {
+      try {
+        ploader = new Reloader(desc.getPath(), getClass().getClassLoader());
+        Class<?> cls = ploader.loadClass(desc.getCanaryInf().getString("main-class"));
+        //A hacky way of getting the name in during the constructor/initializer
+        Plugin.threadLocalName.set(desc.getName());
+        Plugin p = (Plugin)cls.newInstance();
+        //If it isn't called in initializer, gotta set it here.
+        p.setName(desc.getName());
+        p.setPriority(desc.getPriority());
+        desc.setPlugin(p);
+      }
+      catch (Throwable thrown) {
+        throw new PluginLoadFailedException("Failed to load plugin", thrown);
+      }
 
 
+      watchThread = new Thread(new Runnable() {
+        @Override public void run() {
+          try {
+            Path path = new File(desc.getPath()).toPath();
+            WatchService watchService =
+                path.getFileSystem().newWatchService();
+
+            // see http://stackoverflow.com/questions/9588737/is-java-7-watchservice-slow-for-anyone-else
+            path.register(watchService,
+                new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_MODIFY},
+                SensitivityWatchEventModifier.HIGH);
+
+            while (!Thread.currentThread().isInterrupted()) {
+              WatchKey key = watchService.poll(50, TimeUnit.MILLISECONDS);
+              if (key != null && !key.pollEvents().isEmpty()) {
+                System.out.println("Plugin change detected, auto-reloading...");
+                System.out.flush();
+                disable();
+                unload();
+                load();
+                enable();
+                System.out.println("...plugin reloaded.");
+                System.out.flush();
+              }
+            }
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          }
+        }
+      });
+      watchThread.start();
+    }
+
+    @Override protected void _unload() {
+      if (watchThread != null && watchThread.isAlive()) {
+        watchThread.interrupt();
+      }
+      ploader = null;
+    }
+  }
 
   public static class TestPluginManager implements PluginManager {
     private final DefaultPluginManager inner;
@@ -136,41 +259,6 @@ public class IntegrationTest {
 
     @Override public PluginDescriptor getPluginDescriptor(String plugin) {
       return inner.getPluginDescriptor(plugin);
-    }
-  }
-
-  public static class TestPluginLifecycle extends PluginLifecycleBase {
-    public TestPluginLifecycle(PluginDescriptor desc) {
-      super(desc);
-    }
-
-    @Override public boolean enable() {
-      System.out.println("enable!");
-      return true;
-    }
-
-    @Override public boolean disable() {
-      System.out.println("disable!");
-      return true;
-    }
-
-    @Override public Plugin load() throws PluginLoadFailedException {
-      System.out.println("load!");
-      return null;
-      // return super.load();
-    }
-
-    @Override public void unload() {
-      // super.unload();
-    }
-
-    @Override protected void _load() throws PluginLoadFailedException {
-      System.out.printf("LOAD");
-      // throw new UnsupportedOperationException();
-    }
-
-    @Override protected void _unload() {
-      // throw new UnsupportedOperationException();
     }
   }
 
