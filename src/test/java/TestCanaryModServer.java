@@ -72,9 +72,20 @@ public class TestCanaryModServer {
                 put("version", "1.3");
               }});
 
+      TestPluginDescriptor testRunnerDescriptor =
+          new TestPluginDescriptor(
+              new File(projectRootDir, "classes/production/CanaryRaspberryJuice").getAbsolutePath(),
+              new LinkedHashMap<String, String>(){{
+                put("main-class", "com.stuffaboutcode.canaryraspberryjuicetest.TestRunnerPlugin");
+                put("name", "TestRunnerPlugin");
+                put("author", "Steve Conover");
+                put("version", "0.0.1");
+              }});
+
       TestPluginManager pluginManager = new TestPluginManager();
       pluginManager.putPluginDescriptor(helloPluginDescriptor);
       pluginManager.putPluginDescriptor(raspberryJuicePluginDescriptor);
+      pluginManager.putPluginDescriptor(testRunnerDescriptor);
 
       MinecraftServer minecraftServer = Main.doMain(new String[] {}, pluginManager);
       while (!minecraftServer.isRunning()) {

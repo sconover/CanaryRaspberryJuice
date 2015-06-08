@@ -13,7 +13,7 @@ public class HelloPlugin extends Plugin {
 
     Canary.hooks().registerListener(new Listener(), this);
 
-    Canary.getServer().broadcastMessage("ENABLE PLUGIN");
+    Canary.getServer().broadcastMessage("ENABLE PLUGIN 2");
 
     return true;
   }
