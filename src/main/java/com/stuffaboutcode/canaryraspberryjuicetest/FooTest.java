@@ -13,6 +13,21 @@ import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 public class FooTest {
+
+  /**
+   * - literal fixtures :)
+   *   e.g. set up some blocks such and such way
+   *
+   * - literal test run
+   *   e.g. you can see a line of things executing
+   *     place the current player in position to watch
+   *     shift to each new test position?
+   *     slow things down...
+   *       take ticks/sec into consideration...
+   *       adjust to wall clock time.
+   *         e.g. 200 ms / write operation
+   */
+
   @Test
   public void testPlayerChat() throws Exception {
     String chatMessage = String.format("this-is-the-chat-message--%d", System.currentTimeMillis());

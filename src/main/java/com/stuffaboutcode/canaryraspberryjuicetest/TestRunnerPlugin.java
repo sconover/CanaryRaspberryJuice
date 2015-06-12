@@ -6,17 +6,19 @@ import java.io.OutputStreamWriter;
 import net.canarymod.plugin.Plugin;
 import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
+import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
 public class TestRunnerPlugin extends Plugin {
   @Override public boolean enable() {
 
+    Request request = Request.classes(FooTest.class);
+    //Request request = Request.method(FooTest.class, "testPlayerChat");
+
     JUnitCore runner = new JUnitCore();
     runner.addListener(new TestRunListener(new BufferedWriter(new OutputStreamWriter(System.out))));
-    runner.run(
-        FooTest.class
-    );
+    runner.run(request);
 
     return true;
   }
@@ -32,42 +34,44 @@ public class TestRunnerPlugin extends Plugin {
       this.writer = writer;
     }
 
-    @Override public void testRunStarted(Description description) throws Exception {
-      printDescription("RUNNING: ", description);
+    private void println(String s) {
+      try {
+        writer.append("[TEST] " + s);
+        writer.newLine();
+        writer.flush();
+      } catch (IOException ex) {
+        throw new RuntimeException(ex);
+      }
     }
 
     @Override public void testRunFinished(Result result) throws Exception {
-      writer.append("RESULT: " + result.toString());
-      writer.newLine();
-      writer.flush();
+      println(
+          String.format(
+              "RESULT: %s -- %d tests, %d failures, %d ignored, in %d seconds.",
+              (result.wasSuccessful() ? "PASS" : "FAIL"),
+              result.getRunCount(),
+              result.getFailureCount(),
+              result.getIgnoreCount(),
+              (result.getRunTime() / 1000)
+          ));
     }
 
     @Override public void testStarted(Description description) throws Exception {
-      printDescription("STARTED: ", description);
+      printDescription("-- ", description);
     }
 
     @Override public void testFinished(Description description) throws Exception {
-      printDescription("FINISHED: ", description);
+      // printDescription("FINISHED: ", description);
     }
 
     @Override public void testFailure(Failure failure) throws Exception {
-      writer.append("FAILURE: " + failure.toString());
-      writer.newLine();
-      writer.append(failure.getTrace());
-      writer.newLine();
-      writer.flush();
+      println("FAILURE: " + failure.toString());
+      println(failure.getTrace());
     }
 
     @Override public void testAssumptionFailure(Failure failure) {
-      try {
-        writer.append("FAILURE: " + failure.toString());
-        writer.newLine();
-        writer.append(failure.getTrace());
-        writer.newLine();
-        writer.flush();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+      println("FAILURE: " + failure.toString());
+      println(failure.getTrace());
     }
 
     @Override public void testIgnored(Description description) throws Exception {
@@ -75,9 +79,7 @@ public class TestRunnerPlugin extends Plugin {
     }
 
     private void printDescription(String prefix, Description description) throws IOException {
-      writer.append(prefix + description.toString());
-      writer.newLine();
-      writer.flush();
+      println(prefix + description.toString());
     }
   }
 }
