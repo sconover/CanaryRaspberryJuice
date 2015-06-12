@@ -1,17 +1,20 @@
 package com.stuffaboutcode.canaryraspberryjuice;
 
-import java.util.*;
-
-//import net.canarymod.chat.Colors;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import net.canarymod.api.entity.living.humanoid.Player;
+import net.canarymod.api.inventory.Item;
+import net.canarymod.api.inventory.ItemType;
 import net.canarymod.hook.HookHandler;
-import net.canarymod.hook.system.ServerTickHook;
-//import net.canarymod.hook.player.ConnectionHook;
 import net.canarymod.hook.player.BlockRightClickHook;
 import net.canarymod.hook.player.ChatHook;
-import net.canarymod.plugin.*;
-import net.canarymod.api.inventory.*;
-import net.canarymod.api.entity.living.humanoid.Player;
-import com.stuffaboutcode.canaryraspberryjuice.RemoteSession;
+import net.canarymod.hook.system.ServerTickHook;
+import net.canarymod.plugin.PluginListener;
+
+//import net.canarymod.chat.Colors;
+//import net.canarymod.hook.player.ConnectionHook;
 
 public class CanaryRaspberryJuiceListener implements PluginListener {
 	
@@ -41,7 +44,7 @@ public class CanaryRaspberryJuiceListener implements PluginListener {
 		Iterator<RemoteSession> sI = plugin.sessions.iterator();
 		while(sI.hasNext()) {
 			RemoteSession s = sI.next();
-			if (s.pendingRemoval) {
+			if (s.isPendingRemoval()) {
 				s.close();
 				sI.remove();
 			} else {

@@ -5,9 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.canarymod.Canary;
 import net.canarymod.api.Server;
-import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.World;
-import net.canarymod.api.world.position.Location;
 import net.canarymod.plugin.Plugin;
 
 public class CanaryRaspberryJuicePlugin extends Plugin {
@@ -98,40 +96,5 @@ public class CanaryRaspberryJuicePlugin extends Plugin {
 		return getServer().getWorldManager().getAllWorlds().iterator().next();
 	}
 	
-	public Location getSpawnLocation(){
-		return getWorld().getSpawnLocation();
-	}
 
-	// get the host player, i.e. the first player on the server
-	public Player getHostPlayer() {
-		List<Player> allPlayers = getServer().getPlayerList();
-		if (allPlayers.size() >= 1)
-			return allPlayers.iterator().next();
-		return null;
-	}
-	
-	// gets a named player, as opposed to the host player
-	public Player getNamedPlayer(String name) {
-        if (name == null) return null;
-        // TODO - change this to use getPlayer(name)
-        List<Player> allPlayers = getServer().getPlayerList();
-        for (int i = 0; i < allPlayers.size(); ++i) {
-            if (name.equals(allPlayers.get(i).getName())) {
-                return allPlayers.get(i);
-            }
-        }
-        return null;
-    }
-	
-	//get entity by id - TODO to be compatible with the pi it should be changed to return an entity not a player...
-	public Player getEntity(int id) {
-		List<Player> allPlayers = getServer().getPlayerList();
-        for (int i = 0; i < allPlayers.size(); ++i) {
-            if (allPlayers.get(i).getID() == id) {
-                return allPlayers.get(i);
-            }
-        }
-		return null;
-	}
-	
 }

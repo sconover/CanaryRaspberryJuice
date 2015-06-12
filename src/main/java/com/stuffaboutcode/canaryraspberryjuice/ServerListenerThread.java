@@ -2,6 +2,7 @@ package com.stuffaboutcode.canaryraspberryjuice;
 
 import java.io.*;
 import java.net.*;
+import net.canarymod.Canary;
 
 public class ServerListenerThread implements Runnable {
 
@@ -26,7 +27,8 @@ public class ServerListenerThread implements Runnable {
 			try {
 				Socket newConnection = serverSocket.accept();
 				if (!running) return;
-				plugin.handleConnection(new RemoteSession(plugin, newConnection));
+				plugin.handleConnection(
+						new RemoteSession(Canary.getServer(), plugin.getLogman(), newConnection));
 			} catch (Exception e) {
 				// if the server thread is still running raise an error
 				if (running) {
