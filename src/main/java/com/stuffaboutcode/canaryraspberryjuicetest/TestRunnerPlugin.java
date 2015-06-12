@@ -13,6 +13,14 @@ import org.junit.runner.notification.Failure;
 public class TestRunnerPlugin extends Plugin {
   @Override public boolean enable() {
 
+    // Test execution and reporting are intentionally bare-bones.
+    //
+    // The selection of tests to run is controlled by which "request" is passed to
+    // the JUnit runner. Uncomment your desired request, the build, and
+    // the autoreloader will reload the plugin, and test(s) will execute.
+    //
+    // Remember to uncomment the request that runs all tests, before committing code.
+
     Request request = Request.classes(FooTest.class);
     //Request request = Request.method(FooTest.class, "testPlayerChat");
 

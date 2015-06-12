@@ -12,10 +12,13 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import net.canarymod.Main;
 import net.canarymod.exceptions.InvalidPluginException;
 import net.canarymod.exceptions.PluginLoadFailedException;
@@ -175,11 +178,18 @@ public class TestCanaryModServer {
         throw new PluginLoadFailedException("Failed to load plugin", thrown);
       }
 
-
       watchThread = new Thread(new Runnable() {
         @Override public void run() {
           try {
-            Path path = new File(desc.getPath()).toPath();
+            String parentDir = desc.getPath();
+            List<String> subDirParts = Arrays.asList(desc.getCanaryInf().getString("main-class").split("\\."));
+            String subDir =
+                subDirParts
+                    .subList(0, subDirParts.size()-1)
+                    .stream()
+                    .collect(Collectors.joining("/"));
+            Path path = new File(parentDir, subDir).toPath();
+            System.out.println("Watching path for changes: " + path.toString());
             WatchService watchService =
                 path.getFileSystem().newWatchService();
 
