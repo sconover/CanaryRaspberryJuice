@@ -6,11 +6,16 @@ import com.google.common.collect.Sets;
 import com.stuffaboutcode.canaryraspberryjuice.RemoteSession;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import net.canarymod.Canary;
 import net.canarymod.api.Server;
 import net.canarymod.api.world.World;
@@ -97,14 +102,14 @@ public class FooTest {
     }
   }
 
-  static class BlockLocation {
-    public final Block block;
+  static class Relative<T> {
+    public final T object;
     public final int x;
     public final int y;
     public final int z;
 
-    public BlockLocation(Block block, int x, int y, int z) {
-      this.block = block;
+    public Relative(T object, int x, int y, int z) {
+      this.object = object;
       this.x = x;
       this.y = y;
       this.z = z;
@@ -112,39 +117,52 @@ public class FooTest {
   }
 
   static class CuboidReference {
-    private final World world;
-    private final Position start;
+    private final Block start;
     private final int xSize;
     private final int ySize;
     private final int zSize;
 
-    public CuboidReference(World world, Position start, int xSize, int ySize, int zSize) {
-      this.world = world;
+    public CuboidReference(Block start, int xSize, int ySize, int zSize) {
+      Preconditions.checkArgument(
+          xSize >= 1 && ySize >= 1 && zSize >= 1,
+          "cuboid must be at least 1x1x1");
       this.start = start;
       this.xSize = xSize;
       this.ySize = ySize;
       this.zSize = zSize;
     }
 
-    public Cuboid read() {
+    public Cuboid fetchBlocks() {
+      //TODO real-world bounds checking
+
       Block[][][] result = new Block[xSize][ySize][zSize];
       for (int x = 0; x < xSize; x++) {
         for (int y = 0; y < ySize; y++) {
           for (int z = 0; z < zSize; z++) {
-            Block block =
-                world.getBlockAt(
-                    start.getBlockX() + x,
-                    start.getBlockY() + y,
-                    start.getBlockZ() + z);
-            result[x][y][z] = block;
+            result[x][y][z] = start.getRelative(x, y, z);
           }
         }
       }
       return new Cuboid(result);
     }
+
+    public CuboidReference center() {
+      int centerXStart = xSize % 2 == 0 ? xSize / 2 - 1 : xSize / 2;
+      int centerXSize = xSize % 2 == 0 ? 2 : 1;
+
+      int centerYStart = ySize % 2 == 0 ? ySize / 2 - 1 : ySize / 2;
+      int centerYSize = ySize % 2 == 0 ? 2 : 1;
+
+      int centerZStart = zSize % 2 == 0 ? zSize / 2 - 1 : zSize / 2;
+      int centerZSize = zSize % 2 == 0 ? 2 : 1;
+
+      Block newStart = start.getRelative(centerXStart, centerYStart, centerZStart);
+
+      return new CuboidReference(newStart, centerXSize, centerYSize, centerZSize);
+    }
   }
 
-  static class Cuboid implements Iterable<BlockLocation> {
+  static class Cuboid implements Iterable<Relative<Block>> {
     private final Block[][][] blocks;
 
     public Cuboid(Block[][][] blocks) {
@@ -153,8 +171,8 @@ public class FooTest {
 
     public Set<BlockType> blockTypes() {
       Set<BlockType> blockTypes = new LinkedHashSet<>();
-      for (BlockLocation blockLocation : this) {
-        blockTypes.add(blockLocation.block.getType());
+      for (Relative<Block> blockLocation : this) {
+        blockTypes.add(blockLocation.object.getType());
       }
       return blockTypes;
     }
@@ -167,14 +185,37 @@ public class FooTest {
       return isUniformType(BlockType.Air);
     }
 
-    class BlockLocationIterator implements Iterator<BlockLocation> {
+    public Iterator<Relative<Block>> iterator() {
+      return new RelativeBlockIterator(blocks);
+    }
+
+    public Stream<Relative<Block>> stream() {
+      return StreamSupport.stream(
+          Spliterators.spliteratorUnknownSize(iterator(), Spliterator.ORDERED),
+          false);
+    }
+
+    public Cuboid changeBlocksToType(BlockType newType) {
+      stream().forEach((relativeBlock) -> {
+        relativeBlock.object.setType(newType);
+        relativeBlock.object.update();
+      });
+      return this;
+    }
+
+    public Cuboid makeEmpty() {
+      changeBlocksToType(BlockType.Air);
+      return this;
+    }
+
+    class RelativeBlockIterator implements Iterator<Relative<Block>> {
       private final Block[][][] blocks;
       private int x;
       private int y;
       private int z;
-      private BlockLocation next;
+      private Relative next;
 
-      public BlockLocationIterator(Block[][][] blocks) {
+      public RelativeBlockIterator(Block[][][] blocks) {
         this.blocks = blocks;
 
         Preconditions.checkState(
@@ -182,15 +223,15 @@ public class FooTest {
                 blocks[0].length >= 1 &&
                 blocks[0][0].length >= 1,
             "3D block array must be at least 1x1x1");
-        this.next = new BlockLocation(blocks[0][0][0], 0, 0, 0);
+        this.next = new Relative<Block>(blocks[0][0][0], 0, 0, 0);
       }
 
       @Override public boolean hasNext() {
         return next != null;
       }
 
-      @Override public BlockLocation next() {
-        BlockLocation result = next;
+      @Override public Relative<Block> next() {
+        Relative<Block> result = next;
         advance();
         return result;
       }
@@ -211,49 +252,72 @@ public class FooTest {
           y = 0;
           z = 0;
         }
-        next = new BlockLocation(blocks[x][y][z], x, y, z);
+        next = new Relative<Block>(blocks[x][y][z], x, y, z);
       }
-    }
-
-    public Iterator<BlockLocation> iterator() {
-      return new BlockLocationIterator(blocks);
     }
   }
 
   @Test
+  public void testChangeType() {
+    Block blockAtTopOfWorld = serverHelper.getWorld().getBlockAt(1, 250, 1);
+    Cuboid cuboid = new CuboidReference(blockAtTopOfWorld, 10, 10, 10).fetchBlocks();
+
+    cuboid.makeEmpty();
+    // cuboid.changeBlocksToType(BlockType.GoldBlock);
+  }
+
+  @Test
   public void testCuboid() {
-    Position topOfWorld = new Position(1, 250, 1);
+    Block blockAtTopOfWorld = serverHelper.getWorld().getBlockAt(1, 250, 1);
 
-    Cuboid cuboid = new CuboidReference(serverHelper.getWorld(), topOfWorld, 1, 1, 1).read();
-    List<BlockLocation> blockLocations = Lists.newArrayList(cuboid);
+    CuboidReference topRef = new CuboidReference(blockAtTopOfWorld, 1, 1, 1);
+    Cuboid cuboid = topRef.fetchBlocks();
+    List<Relative<Block>> blockLocations = Lists.newArrayList(cuboid);
     assertEquals(1, blockLocations.size());
-    assertEquals(new Position(1, 250, 1), blockLocations.get(0).block.getPosition());
-    assertEquals(BlockType.Air, blockLocations.get(0).block.getType());
+    assertEquals(new Position(1, 250, 1), blockLocations.get(0).object.getPosition());
+    assertEquals(BlockType.Air, blockLocations.get(0).object.getType());
 
-    cuboid = new CuboidReference(serverHelper.getWorld(), topOfWorld, 2, 3, 2).read();
+    CuboidReference topLargerRef = new CuboidReference(blockAtTopOfWorld, 2, 3, 2);
+    cuboid = topLargerRef.fetchBlocks();
     blockLocations = Lists.newArrayList(cuboid);
     assertEquals(12, blockLocations.size());
-    assertEquals(new Position(1, 250, 1), blockLocations.get(0).block.getPosition());
-    assertEquals(new Position(1, 250, 2), blockLocations.get(1).block.getPosition());
-    assertEquals(new Position(1, 251, 1), blockLocations.get(2).block.getPosition());
-    assertEquals(new Position(1, 251, 2), blockLocations.get(3).block.getPosition());
-    assertEquals(new Position(1, 252, 1), blockLocations.get(4).block.getPosition());
-    assertEquals(new Position(1, 252, 2), blockLocations.get(5).block.getPosition());
-    assertEquals(new Position(2, 250, 1), blockLocations.get(6).block.getPosition());
-    assertEquals(new Position(2, 250, 2), blockLocations.get(7).block.getPosition());
-    assertEquals(new Position(2, 251, 1), blockLocations.get(8).block.getPosition());
-    assertEquals(new Position(2, 251, 2), blockLocations.get(9).block.getPosition());
-    assertEquals(new Position(2, 252, 1), blockLocations.get(10).block.getPosition());
-    assertEquals(new Position(2, 252, 2), blockLocations.get(11).block.getPosition());
+    assertEquals(new Position(1, 250, 1), blockLocations.get(0).object.getPosition());
+    assertEquals(new Position(1, 250, 2), blockLocations.get(1).object.getPosition());
+    assertEquals(new Position(1, 251, 1), blockLocations.get(2).object.getPosition());
+    assertEquals(new Position(1, 251, 2), blockLocations.get(3).object.getPosition());
+    assertEquals(new Position(1, 252, 1), blockLocations.get(4).object.getPosition());
+    assertEquals(new Position(1, 252, 2), blockLocations.get(5).object.getPosition());
+    assertEquals(new Position(2, 250, 1), blockLocations.get(6).object.getPosition());
+    assertEquals(new Position(2, 250, 2), blockLocations.get(7).object.getPosition());
+    assertEquals(new Position(2, 251, 1), blockLocations.get(8).object.getPosition());
+    assertEquals(new Position(2, 251, 2), blockLocations.get(9).object.getPosition());
+    assertEquals(new Position(2, 252, 1), blockLocations.get(10).object.getPosition());
+    assertEquals(new Position(2, 252, 2), blockLocations.get(11).object.getPosition());
 
     assertTrue(cuboid.isAir());
 
-    Position bottomOfWorld = new Position(0, 0, 0);
-    cuboid = new CuboidReference(serverHelper.getWorld(), bottomOfWorld, 2, 4, 2).read();
+    Block blockAtBottomOfWorld = serverHelper.getWorld().getBlockAt(0, 0, 0);
+    cuboid = new CuboidReference(blockAtBottomOfWorld, 2, 4, 2).fetchBlocks();
     blockLocations = Lists.newArrayList(cuboid);
     assertEquals(16, blockLocations.size());
 
     assertFalse(cuboid.isAir());
+
+    //TODO
+    //change CuboidReference to be based on a starting block
+    //so, cuboids are always guaranteed to be 1x1x1 - this is still a precondition.
+
+    //need to be able to easily value-compare cuboids
+    //change Cuboid to CuboidOfBlocks
+    //BlockSnapshot.fromBlock(block)...
+    //BlockSnapshot is value comparable
+    // make CuboidOfBlockSnapshots
+    // cuboid.snapshot() -> CuboidOfBlockSnapshots
+    //cuboidReference.fetchBlocks().snapshot().equals(cuboidRef.fetchBlocks().snapshot())
+    //CuboidOfBlockTypes
+    //... Generic Cuboid...
+    // Cuboid<T>
+
     //
     //Block block = serverHelper.getWorld().getBlockAt(0, 255, 0);
     //block.setType(BlockType.Air);
@@ -314,6 +378,27 @@ public class FooTest {
 
     // "world.getBlock"
 
+  }
+
+  @Test
+  public void testCuboidCenter() {
+    Block blockAtTopOfWorld = serverHelper.getWorld().getBlockAt(1, 250, 1);
+
+    assertEquals(
+        Arrays.asList(
+            new Position(1, 251, 1),
+            new Position(1, 251, 2),
+            new Position(2, 251, 1),
+            new Position(2, 251, 2)),
+        new CuboidReference(blockAtTopOfWorld, 2, 3, 2).center().fetchBlocks().stream()
+            .map(rb -> rb.object.getPosition())
+            .collect(Collectors.toList()));
+
+    assertEquals(
+        Arrays.asList(new Position(1, 250, 1)),
+        new CuboidReference(blockAtTopOfWorld, 1, 1, 1).center().fetchBlocks().stream()
+            .map(rb -> rb.object.getPosition())
+            .collect(Collectors.toList()));
   }
 
   public static class TestOut implements RemoteSession.Out {
