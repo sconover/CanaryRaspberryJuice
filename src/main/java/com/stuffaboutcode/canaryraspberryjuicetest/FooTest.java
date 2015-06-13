@@ -19,9 +19,11 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import net.canarymod.Canary;
 import net.canarymod.api.Server;
+import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.World;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
+import net.canarymod.api.world.position.Location;
 import net.canarymod.api.world.position.Position;
 import net.canarymod.logger.Logman;
 import org.apache.commons.io.input.ReversedLinesFileReader;
@@ -42,6 +44,14 @@ public class FooTest {
   }
 
   /**
+   * TODO:
+   *
+   * - Shift player to a location relative to a position
+   * - Locate tests at 50 blocks above ground level at 0,0
+   * - Shift player to each new test area...
+   * ...shift test start position accordingly
+   *
+   *
    * - literal fixtures :) e.g. set up some blocks such and such way
    *
    * - literal test run e.g. you can see a line of things executing place the current player in
@@ -131,21 +141,6 @@ public class FooTest {
     assertEquals(16, blockLocations.size());
 
     assertFalse(cuboid.isAir());
-
-    //TODO
-    //change CuboidReference to be based on a starting block
-    //so, cuboids are always guaranteed to be 1x1x1 - this is still a precondition.
-
-    //need to be able to easily value-compare cuboids
-    //change Cuboid to CuboidOfBlocks
-    //BlockSnapshot.fromBlock(block)...
-    //BlockSnapshot is value comparable
-    // make CuboidOfBlockSnapshots
-    // cuboid.snapshot() -> CuboidOfBlockSnapshots
-    //cuboidReference.fetchBlocks().snapshot().equals(cuboidRef.fetchBlocks().snapshot())
-    //CuboidOfBlockTypes
-    //... Generic Cuboid...
-    // Cuboid<T>
   }
 
   @Test
@@ -173,9 +168,24 @@ public class FooTest {
             .stream()
             .map(rb -> rb.object.getPosition())
             .collect(Collectors.toList()));
+
+
+    // Location.
+    // serverHelper.getFirstPlayer().teleportTo(new Location(), TeleportHook.TeleportCause.PLUGIN);
   }
 
-  static class ServerHelper {
+  @Test
+  public void testMovePlayer() {
+    CuboidReference ref = new CuboidReference(new Position(1, 100, 1), 5, 5, 5);
+    Cuboid goldCube = ref.fetchBlocks(serverHelper.getWorld());
+    goldCube.changeBlocksToType(BlockType.GoldBlock);
+    Location locationFacingPosition =
+        LocationHelper.getLocationFacingPosition(goldCube.firstBlock().getPosition(), 30, 10, 0);
+    serverHelper.getFirstPlayer().teleportTo(locationFacingPosition);
+  }
+
+
+    static class ServerHelper {
     private final Server server;
     private final World firstWorld;
 
@@ -190,6 +200,47 @@ public class FooTest {
 
     public World getWorld() {
       return firstWorld;
+    }
+
+    // get the host player, i.e. the first player on the server
+    public Player getFirstPlayer() {
+      Preconditions.checkState(
+          ! server.getPlayerList().isEmpty(),
+          "must have logged-in players in order for this to work");
+
+      return server.getPlayerList().get(0);
+    }
+
+    // get the host player, i.e. the first player on the server
+    public boolean hasPlayers() {
+      return ! server.getPlayerList().isEmpty();
+    }
+  }
+
+  static class LocationHelper {
+    public static Location getLocationFacingPosition(Position p, int xOffset, int yOffset, int zOffset) {
+      float rotation = 0.0f;
+
+      //TODO this is crude, calculate tangent instead
+      if (xOffset < 0) {
+        rotation = 270.0f;
+      }
+      if (xOffset > 0) {
+        rotation = 90.0f;
+      }
+      if (zOffset < 0) {
+        rotation = 0.0f;
+      }
+      if (zOffset > 0) {
+        rotation = 180.0f;
+      }
+
+      float pitch = 0.0f;
+
+      Location newLocation = new Location(p.getX() + xOffset, p.getY() + yOffset, p.getZ() + zOffset);
+      newLocation.setRotation(rotation);
+      newLocation.setPitch(pitch);
+      return newLocation;
     }
   }
 
@@ -302,6 +353,10 @@ public class FooTest {
     public Cuboid makeEmpty() {
       changeBlocksToType(BlockType.Air);
       return this;
+    }
+
+    public Block firstBlock() {
+      return blocks[0][0][0];
     }
 
     class RelativeBlockIterator implements Iterator<Relative<Block>> {
