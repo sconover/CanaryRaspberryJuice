@@ -47,14 +47,74 @@ public class TestRunnerPlugin extends Plugin {
       this.rootPath = rootPath;
     }
 
-    @Command(aliases = { "test", "t" },
+    @Command(aliases = { "test" },
         helpLookup = "test",
         description = "run a test or tests",
         permissions = { "canary.command.test" },
-        toolTip = "/test [class or method]",
+        toolTip = "/test [class or method] (blank for all tests)",
         min = 1)
     public void testRun(MessageReceiver caller, String[] parameters) {
+      ClassesAndClassesAndMethods classesAndClassesAndMethods = scanDir();
 
+      Request request = null;
+      if (parameters.length == 2) {
+        request = junitRequestFromSearchString(parameters[1], classesAndClassesAndMethods);
+        if (request == null) {
+          caller.message(String.format("'%s' not found.", parameters[1]));
+          return;
+        } else {
+          rememberTest(parameters[1]);
+        }
+      } else {
+        request = Request.classes(
+            classesAndClassesAndMethods.classes.toArray(
+                new Class[classesAndClassesAndMethods.classes.size()]));
+      }
+
+      JUnitCore runner = new JUnitCore();
+      runner.addListener(new TestRunListener(caller));
+      runner.run(request);
+    }
+
+    @Command(aliases = { "t" },
+        helpLookup = "t",
+        description = "runs the previous test, or all tests if no last test is set",
+        permissions = { "canary.command.t" },
+        toolTip = "/t",
+        min = 1)
+    public void testRunLastTest(MessageReceiver caller, String[] parameters) {
+      caller.message(String.format("Last test run is '%s'", getLastTest()));
+
+      ClassesAndClassesAndMethods classesAndClassesAndMethods = scanDir();
+
+      Request request = null;
+      if (getLastTest() == null) {
+        request = Request.classes(
+            classesAndClassesAndMethods.classes.toArray(
+                new Class[classesAndClassesAndMethods.classes.size()]));
+      } else {
+        request = junitRequestFromSearchString(getLastTest(), classesAndClassesAndMethods);
+        if (request == null) {
+          caller.message(String.format("'%s' not found.", getLastTest()));
+          return;
+        }
+      }
+
+      JUnitCore runner = new JUnitCore();
+      runner.addListener(new TestRunListener(caller));
+      runner.run(request);
+    }
+
+    private void rememberTest(String testName) {
+      //hackey way of getting last test to survive class reload, which makes /t much more convenient
+      System.setProperty("lastTest", testName);
+    }
+
+    private String getLastTest() {
+      return System.getProperty("lastTest");
+    }
+
+    private ClassesAndClassesAndMethods scanDir() {
       List<Class> testClasses = new ArrayList<>();
       List<ClassAndMethod> testClassAndMethod = new ArrayList<>();
       try {
@@ -86,33 +146,38 @@ public class TestRunnerPlugin extends Plugin {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
+      return new ClassesAndClassesAndMethods(testClasses, testClassAndMethod);
+    }
 
+    private Request junitRequestFromSearchString(String search, ClassesAndClassesAndMethods classesAndClassesAndMethods) {
       Request request = null;
-      if (parameters.length == 2) {
-        String search = parameters[1];
-        Optional<Class> classResult = testClasses.stream()
-            .filter(k -> k.getSimpleName().equals(search))
-            .findFirst();
-        if (classResult.isPresent()) {
-          request = Request.classes(classResult.get());
-        } else {
-          Optional<ClassAndMethod> methodResult = testClassAndMethod.stream()
-              .filter(classAndMethod -> classAndMethod.getMethod().equals(search))
-              .findFirst();
-          if (methodResult.isPresent()) {
-            request = Request.method(methodResult.get().getKlass(), methodResult.get().getMethod());
-          } else {
-            caller.message(String.format("'%s' not found.", search));
-            return;
-          }
-        }
+      Optional<Class> classResult = classesAndClassesAndMethods.classes.stream()
+          .filter(k -> k.getSimpleName().equals(search))
+          .findFirst();
+      if (classResult.isPresent()) {
+        request = Request.classes(classResult.get());
       } else {
-        request = Request.classes(testClasses.toArray(new Class[testClasses.size()]));
+        Optional<ClassAndMethod> methodResult = classesAndClassesAndMethods.classesAndMethods.stream()
+            .filter(classAndMethod -> classAndMethod.getMethod().equals(search))
+            .findFirst();
+        if (methodResult.isPresent()) {
+          request = Request.method(methodResult.get().getKlass(), methodResult.get().getMethod());
+        } else {
+          return null;
+        }
       }
+      return request;
+    }
+  }
 
-      JUnitCore runner = new JUnitCore();
-      runner.addListener(new TestRunListener(caller));
-      runner.run(request);
+  public static class ClassesAndClassesAndMethods {
+    public final List<Class> classes;
+    public final List<ClassAndMethod> classesAndMethods;
+
+    public ClassesAndClassesAndMethods(List<Class> classes,
+        List<ClassAndMethod> classesAndMethods) {
+      this.classes = classes;
+      this.classesAndMethods = classesAndMethods;
     }
   }
 

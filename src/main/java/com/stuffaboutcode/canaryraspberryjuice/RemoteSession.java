@@ -652,7 +652,7 @@ public class RemoteSession {
 		}
 
 		// get a cuboid of lots of blocks
-		private String getBlocks(Location pos1, Location pos2) {
+		private String  getBlocks(Location pos1, Location pos2) {
 			StringBuilder blockData = new StringBuilder();
 
 			int minX, maxX, minY, maxY, minZ, maxZ;
