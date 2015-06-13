@@ -26,6 +26,8 @@ public class FooTest {
    *       take ticks/sec into consideration...
    *       adjust to wall clock time.
    *         e.g. 200 ms / write operation
+   *
+   * - stay end to end for a while...
    */
 
   @Test
