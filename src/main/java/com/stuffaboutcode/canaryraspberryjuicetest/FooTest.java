@@ -3,6 +3,7 @@ package com.stuffaboutcode.canaryraspberryjuicetest;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.stuffaboutcode.canaryraspberryjuice.CommandHandler;
 import com.stuffaboutcode.canaryraspberryjuice.RemoteSession;
 import java.io.File;
 import java.util.ArrayList;
@@ -55,8 +56,8 @@ public class FooTest {
   public void testPlayerChat() throws Exception {
     String chatMessage = String.format("this-is-the-chat-message-%d", System.currentTimeMillis());
 
-    RemoteSession.CommandHandler commandHandler =
-        new RemoteSession.CommandHandler(
+    CommandHandler commandHandler =
+        new CommandHandler(
             Canary.getServer(),
             Logman.getLogman("FooTest-logman"),
             new TestOut());
@@ -323,67 +324,6 @@ public class FooTest {
     //CuboidOfBlockTypes
     //... Generic Cuboid...
     // Cuboid<T>
-
-    //
-    //Block block = serverHelper.getWorld().getBlockAt(0, 255, 0);
-    //block.setType(BlockType.Air);
-    //block.update();
-    // serverHelper.getWorld().
-
-    // find the first 15x15x15 empty space
-    // check backward
-    // then check upward in 15 (or 30?) block increments until a 15x15x15 air cube is found
-    // if there's a current player, move the player there.
-
-    //// get a cuboid of lots of blocks
-    //private String  getBlocks(Location pos1, Location pos2) {
-    //  StringBuilder blockData = new StringBuilder();
-    //
-    //  int minX, maxX, minY, maxY, minZ, maxZ;
-    //  World world = pos1.getWorld();
-    //  minX = pos1.getBlockX() < pos2.getBlockX() ? pos1.getBlockX() : pos2.getBlockX();
-    //  maxX = pos1.getBlockX() >= pos2.getBlockX() ? pos1.getBlockX() : pos2.getBlockX();
-    //  minY = pos1.getBlockY() < pos2.getBlockY() ? pos1.getBlockY() : pos2.getBlockY();
-    //  maxY = pos1.getBlockY() >= pos2.getBlockY() ? pos1.getBlockY() : pos2.getBlockY();
-    //  minZ = pos1.getBlockZ() < pos2.getBlockZ() ? pos1.getBlockZ() : pos2.getBlockZ();
-    //  maxZ = pos1.getBlockZ() >= pos2.getBlockZ() ? pos1.getBlockZ() : pos2.getBlockZ();
-    //
-    //  for (int y = minY; y <= maxY; ++y) {
-    //    for (int x = minX; x <= maxX; ++x) {
-    //      for (int z = minZ; z <= maxZ; ++z) {
-    //        blockData.append(new Integer(world.getBlockAt(x, y, z).getTypeId()).toString() + ",");
-    //      }
-    //    }
-    //  }
-    //
-    //  return blockData.substring(0, blockData.length() > 0 ? blockData.length() - 1 : 0);	// We don't want last comma
-    //}
-
-    // Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
-    // updateBlock(world, loc, Short.parseShort(args[3]), args.length > 4? Short.parseShort(args[4]) : (short) 0);
-
-    // updates a block
-    //private void updateBlock(World world, Location loc, short blockType, short blockData) {
-    //  Block thisBlock = world.getBlockAt(loc);
-    //  updateBlock(thisBlock, blockType, blockData);
-    //}
-    //
-    //private void updateBlock(World world, int x, int y, int z, short blockType, short blockData) {
-    //  Block thisBlock = world.getBlockAt(x,y,z);
-    //  updateBlock(thisBlock, blockType, blockData);
-    //}
-    //
-    //private void updateBlock(Block thisBlock, short blockType, short blockData) {
-    //  // check to see if the block is different - otherwise leave it
-    //  if ((thisBlock.getTypeId() != blockType) || (thisBlock.getData() != blockData)) {
-    //    thisBlock.setTypeId(blockType);
-    //    thisBlock.setData(blockData);
-    //    thisBlock.update();
-    //  }
-    //}
-
-    // "world.getBlock"
-
   }
 
   @Test
