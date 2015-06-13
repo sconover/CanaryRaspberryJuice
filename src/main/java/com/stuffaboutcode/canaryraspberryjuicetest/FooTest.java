@@ -85,6 +85,96 @@ public class FooTest {
     // extract assert string contains
   }
 
+  @Test
+  public void testChangeType() {
+    Position topOfWorld = new Position(1, 250, 1);
+    Cuboid cuboid = new CuboidReference(topOfWorld, 10, 10, 10)
+        .fetchBlocks(serverHelper.getWorld());
+
+    cuboid.makeEmpty();
+    // cuboid.changeBlocksToType(BlockType.GoldBlock);
+  }
+
+  @Test
+  public void testCuboid() {
+    Position topOfWorld = new Position(1, 250, 1);
+
+    CuboidReference topRef = new CuboidReference(topOfWorld, 1, 1, 1);
+    Cuboid cuboid = topRef.fetchBlocks(serverHelper.getWorld());
+    List<Relative<Block>> blockLocations = Lists.newArrayList(cuboid);
+    assertEquals(1, blockLocations.size());
+    assertEquals(new Position(1, 250, 1), blockLocations.get(0).object.getPosition());
+    assertEquals(BlockType.Air, blockLocations.get(0).object.getType());
+
+    CuboidReference topLargerRef = new CuboidReference(topOfWorld, 2, 3, 2);
+    cuboid = topLargerRef.fetchBlocks(serverHelper.getWorld());
+    blockLocations = Lists.newArrayList(cuboid);
+    assertEquals(12, blockLocations.size());
+    assertEquals(new Position(1, 250, 1), blockLocations.get(0).object.getPosition());
+    assertEquals(new Position(1, 250, 2), blockLocations.get(1).object.getPosition());
+    assertEquals(new Position(1, 251, 1), blockLocations.get(2).object.getPosition());
+    assertEquals(new Position(1, 251, 2), blockLocations.get(3).object.getPosition());
+    assertEquals(new Position(1, 252, 1), blockLocations.get(4).object.getPosition());
+    assertEquals(new Position(1, 252, 2), blockLocations.get(5).object.getPosition());
+    assertEquals(new Position(2, 250, 1), blockLocations.get(6).object.getPosition());
+    assertEquals(new Position(2, 250, 2), blockLocations.get(7).object.getPosition());
+    assertEquals(new Position(2, 251, 1), blockLocations.get(8).object.getPosition());
+    assertEquals(new Position(2, 251, 2), blockLocations.get(9).object.getPosition());
+    assertEquals(new Position(2, 252, 1), blockLocations.get(10).object.getPosition());
+    assertEquals(new Position(2, 252, 2), blockLocations.get(11).object.getPosition());
+
+    assertTrue(cuboid.isAir());
+
+    Position bottomOfWorld = new Position(0, 0, 0);
+    cuboid = new CuboidReference(bottomOfWorld, 2, 4, 2).fetchBlocks(serverHelper.getWorld());
+    blockLocations = Lists.newArrayList(cuboid);
+    assertEquals(16, blockLocations.size());
+
+    assertFalse(cuboid.isAir());
+
+    //TODO
+    //change CuboidReference to be based on a starting block
+    //so, cuboids are always guaranteed to be 1x1x1 - this is still a precondition.
+
+    //need to be able to easily value-compare cuboids
+    //change Cuboid to CuboidOfBlocks
+    //BlockSnapshot.fromBlock(block)...
+    //BlockSnapshot is value comparable
+    // make CuboidOfBlockSnapshots
+    // cuboid.snapshot() -> CuboidOfBlockSnapshots
+    //cuboidReference.fetchBlocks().snapshot().equals(cuboidRef.fetchBlocks().snapshot())
+    //CuboidOfBlockTypes
+    //... Generic Cuboid...
+    // Cuboid<T>
+  }
+
+  @Test
+  public void testCuboidCenter() {
+    Position topOfWorld = new Position(1, 250, 1);
+
+    assertEquals(
+        Arrays.asList(
+            new Position(1, 251, 1),
+            new Position(1, 251, 2),
+            new Position(2, 251, 1),
+            new Position(2, 251, 2)),
+        new CuboidReference(topOfWorld, 2, 3, 2)
+            .center()
+            .fetchBlocks(serverHelper.getWorld())
+            .stream()
+            .map(rb -> rb.object.getPosition())
+            .collect(Collectors.toList()));
+
+    assertEquals(
+        Arrays.asList(new Position(1, 250, 1)),
+        new CuboidReference(topOfWorld, 1, 1, 1)
+            .center()
+            .fetchBlocks(serverHelper.getWorld())
+            .stream()
+            .map(rb -> rb.object.getPosition())
+            .collect(Collectors.toList()));
+  }
+
   static class ServerHelper {
     private final Server server;
     private final World firstWorld;
@@ -261,96 +351,6 @@ public class FooTest {
         next = new Relative<Block>(blocks[x][y][z], x, y, z);
       }
     }
-  }
-
-  @Test
-  public void testChangeType() {
-    Position topOfWorld = new Position(1, 250, 1);
-    Cuboid cuboid = new CuboidReference(topOfWorld, 10, 10, 10)
-        .fetchBlocks(serverHelper.getWorld());
-
-    cuboid.makeEmpty();
-    // cuboid.changeBlocksToType(BlockType.GoldBlock);
-  }
-
-  @Test
-  public void testCuboid() {
-    Position topOfWorld = new Position(1, 250, 1);
-
-    CuboidReference topRef = new CuboidReference(topOfWorld, 1, 1, 1);
-    Cuboid cuboid = topRef.fetchBlocks(serverHelper.getWorld());
-    List<Relative<Block>> blockLocations = Lists.newArrayList(cuboid);
-    assertEquals(1, blockLocations.size());
-    assertEquals(new Position(1, 250, 1), blockLocations.get(0).object.getPosition());
-    assertEquals(BlockType.Air, blockLocations.get(0).object.getType());
-
-    CuboidReference topLargerRef = new CuboidReference(topOfWorld, 2, 3, 2);
-    cuboid = topLargerRef.fetchBlocks(serverHelper.getWorld());
-    blockLocations = Lists.newArrayList(cuboid);
-    assertEquals(12, blockLocations.size());
-    assertEquals(new Position(1, 250, 1), blockLocations.get(0).object.getPosition());
-    assertEquals(new Position(1, 250, 2), blockLocations.get(1).object.getPosition());
-    assertEquals(new Position(1, 251, 1), blockLocations.get(2).object.getPosition());
-    assertEquals(new Position(1, 251, 2), blockLocations.get(3).object.getPosition());
-    assertEquals(new Position(1, 252, 1), blockLocations.get(4).object.getPosition());
-    assertEquals(new Position(1, 252, 2), blockLocations.get(5).object.getPosition());
-    assertEquals(new Position(2, 250, 1), blockLocations.get(6).object.getPosition());
-    assertEquals(new Position(2, 250, 2), blockLocations.get(7).object.getPosition());
-    assertEquals(new Position(2, 251, 1), blockLocations.get(8).object.getPosition());
-    assertEquals(new Position(2, 251, 2), blockLocations.get(9).object.getPosition());
-    assertEquals(new Position(2, 252, 1), blockLocations.get(10).object.getPosition());
-    assertEquals(new Position(2, 252, 2), blockLocations.get(11).object.getPosition());
-
-    assertTrue(cuboid.isAir());
-
-    Position bottomOfWorld = new Position(0, 0, 0);
-    cuboid = new CuboidReference(bottomOfWorld, 2, 4, 2).fetchBlocks(serverHelper.getWorld());
-    blockLocations = Lists.newArrayList(cuboid);
-    assertEquals(16, blockLocations.size());
-
-    assertFalse(cuboid.isAir());
-
-    //TODO
-    //change CuboidReference to be based on a starting block
-    //so, cuboids are always guaranteed to be 1x1x1 - this is still a precondition.
-
-    //need to be able to easily value-compare cuboids
-    //change Cuboid to CuboidOfBlocks
-    //BlockSnapshot.fromBlock(block)...
-    //BlockSnapshot is value comparable
-    // make CuboidOfBlockSnapshots
-    // cuboid.snapshot() -> CuboidOfBlockSnapshots
-    //cuboidReference.fetchBlocks().snapshot().equals(cuboidRef.fetchBlocks().snapshot())
-    //CuboidOfBlockTypes
-    //... Generic Cuboid...
-    // Cuboid<T>
-  }
-
-  @Test
-  public void testCuboidCenter() {
-    Position topOfWorld = new Position(1, 250, 1);
-
-    assertEquals(
-        Arrays.asList(
-            new Position(1, 251, 1),
-            new Position(1, 251, 2),
-            new Position(2, 251, 1),
-            new Position(2, 251, 2)),
-        new CuboidReference(topOfWorld, 2, 3, 2)
-            .center()
-            .fetchBlocks(serverHelper.getWorld())
-            .stream()
-            .map(rb -> rb.object.getPosition())
-            .collect(Collectors.toList()));
-
-    assertEquals(
-        Arrays.asList(new Position(1, 250, 1)),
-        new CuboidReference(topOfWorld, 1, 1, 1)
-            .center()
-            .fetchBlocks(serverHelper.getWorld())
-            .stream()
-            .map(rb -> rb.object.getPosition())
-            .collect(Collectors.toList()));
   }
 
   public static class TestOut implements RemoteSession.Out {
