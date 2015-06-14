@@ -23,11 +23,15 @@ import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.World;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
+import net.canarymod.api.world.blocks.CanarySign;
+import net.canarymod.api.world.blocks.properties.helpers.BlockProperties;
+import net.canarymod.api.world.blocks.properties.helpers.StandingSignProperties;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.api.world.position.Position;
 import net.canarymod.logger.Logman;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -37,10 +41,50 @@ import static org.junit.Assert.assertTrue;
 public class FooTest {
 
   private ServerHelper serverHelper;
+  private static int xOffset;
+  private CuboidReference testCuboidRef;
+
+  @BeforeClass
+  public static void setUpOnce() {
+    xOffset = 2;
+  }
 
   @Before
-  public void setup() {
+  public void setUp() throws Exception {
     serverHelper = new ServerHelper(Canary.getServer());
+  }
+
+  private Position nextTestPosition(String name) {
+    Position testPosition = new Position(xOffset, 100, 2);
+    Position justBeforeTestPosition = new Position(xOffset-1, 99, 1);
+    CuboidReference ref = new CuboidReference(justBeforeTestPosition, 31, 51, 31);
+    ref.fetchBlocks(serverHelper.getWorld()).makeEmpty();
+
+    Block block = serverHelper.getWorld().getBlockAt(justBeforeTestPosition);
+    block.setType(BlockType.GoldBlock);
+    block.update();
+
+    Block blockAbove = block.getRelative(0, 1, 0);
+    blockAbove.setType(BlockType.StandingSign);
+    StandingSignProperties.applyRotation(blockAbove, BlockProperties.Rotation.NORTH);
+    blockAbove.update();
+
+    CanarySign sign = (CanarySign)blockAbove.getTileEntity();
+    sign.setTextOnLine(name, 0);
+    //sign.setTextOnLine("bar", 1);
+    //sign.setTextOnLine("zzz", 2);
+    //sign.setTextOnLine("yyy", 3);
+
+    serverHelper.getFirstPlayer().teleportTo(
+        LocationHelper.getLocationFacingPosition(testPosition, 0, 10, -30));
+    try {
+      Thread.sleep(500);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+    xOffset += 30;
+
+    return testPosition;
   }
 
   /**
@@ -97,12 +141,14 @@ public class FooTest {
 
   @Test
   public void testChangeType() {
-    Position topOfWorld = new Position(1, 250, 1);
-    Cuboid cuboid = new CuboidReference(topOfWorld, 10, 10, 10)
+    Position p = nextTestPosition("testChangeType");
+    Cuboid cuboid = new CuboidReference(p, 10, 10, 10)
         .fetchBlocks(serverHelper.getWorld());
 
     cuboid.makeEmpty();
-    // cuboid.changeBlocksToType(BlockType.GoldBlock);
+    assertEquals(BlockType.Air, serverHelper.getWorld().getBlockAt(p).getType());
+    cuboid.changeBlocksToType(BlockType.GoldBlock);
+    assertEquals(BlockType.GoldBlock, serverHelper.getWorld().getBlockAt(p).getType());
   }
 
   @Test
@@ -168,24 +214,21 @@ public class FooTest {
             .stream()
             .map(rb -> rb.object.getPosition())
             .collect(Collectors.toList()));
-
-
-    // Location.
-    // serverHelper.getFirstPlayer().teleportTo(new Location(), TeleportHook.TeleportCause.PLUGIN);
   }
 
   @Test
-  public void testMovePlayer() {
+  public void testMovePlayer() throws Exception {
     CuboidReference ref = new CuboidReference(new Position(1, 100, 1), 5, 5, 5);
     Cuboid goldCube = ref.fetchBlocks(serverHelper.getWorld());
     goldCube.changeBlocksToType(BlockType.GoldBlock);
-    Location locationFacingPosition =
-        LocationHelper.getLocationFacingPosition(goldCube.firstBlock().getPosition(), 30, 10, 0);
-    serverHelper.getFirstPlayer().teleportTo(locationFacingPosition);
+    System.out.println(goldCube.firstBlock().getPosition());
+    serverHelper.getFirstPlayer().teleportTo(
+        LocationHelper.getLocationFacingPosition(new Position(1, 100, 1), 30, 10, 0));
+
+    assertEquals(new Position(31, 110, 1), serverHelper.getFirstPlayer().getPosition());
   }
 
-
-    static class ServerHelper {
+  static class ServerHelper {
     private final Server server;
     private final World firstWorld;
 
@@ -237,9 +280,10 @@ public class FooTest {
 
       float pitch = 0.0f;
 
-      Location newLocation = new Location(p.getX() + xOffset, p.getY() + yOffset, p.getZ() + zOffset);
+      Location newLocation = new Location(p.getBlockX() + xOffset, p.getBlockY() + yOffset, p.getBlockZ() + zOffset);
       newLocation.setRotation(rotation);
       newLocation.setPitch(pitch);
+      System.out.println(newLocation);
       return newLocation;
     }
   }
