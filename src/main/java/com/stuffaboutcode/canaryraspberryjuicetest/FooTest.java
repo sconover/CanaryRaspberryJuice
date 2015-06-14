@@ -52,6 +52,7 @@ public class FooTest {
   @Before
   public void setUp() throws Exception {
     serverHelper = new ServerHelper(Canary.getServer());
+    serverHelper.getWorld().setSpawnLocation(new Location(serverHelper.getWorld(), new Position(0,0,0)));
   }
 
   private Position nextTestPosition(String name) {
@@ -107,7 +108,7 @@ public class FooTest {
 
   //TODO(steve) extract methods
   @Test
-  public void testPlayerChat() throws Exception {
+  public void test_chat_post() throws Exception {
     String chatMessage = String.format("this-is-the-chat-message-%d", System.currentTimeMillis());
 
     CommandHandler commandHandler =
@@ -137,6 +138,32 @@ public class FooTest {
             last20LinesOfLogFile),
         last20LinesOfLogFile.contains(chatMessage));
     // extract assert string contains
+  }
+
+  @Test
+  public void test_world_getBlock() throws Exception {
+    Position p = nextTestPosition("world.getBlock");
+
+    Block block = serverHelper.getWorld().getBlockAt(p);
+    block.setType(BlockType.RedstoneBlock);
+    block.update();
+
+    TestOut out = new TestOut();
+    CommandHandler commandHandler =
+        new CommandHandler(
+            Canary.getServer(),
+            Logman.getLogman("FooTest-logman"),
+            out);
+
+    commandHandler.handleLine(
+        String.format("world.getBlock(%d,%d,%d)",
+            (int)p.getX(),
+            (int)p.getY(),
+            (int)p.getZ()));
+
+    assertEquals(
+        Lists.newArrayList(String.valueOf(BlockType.RedstoneBlock.getId())),
+        out.sends);
   }
 
   @Test
@@ -221,7 +248,6 @@ public class FooTest {
     CuboidReference ref = new CuboidReference(new Position(1, 100, 1), 5, 5, 5);
     Cuboid goldCube = ref.fetchBlocks(serverHelper.getWorld());
     goldCube.changeBlocksToType(BlockType.GoldBlock);
-    System.out.println(goldCube.firstBlock().getPosition());
     serverHelper.getFirstPlayer().teleportTo(
         LocationHelper.getLocationFacingPosition(new Position(1, 100, 1), 30, 10, 0));
 
@@ -283,7 +309,6 @@ public class FooTest {
       Location newLocation = new Location(p.getBlockX() + xOffset, p.getBlockY() + yOffset, p.getBlockZ() + zOffset);
       newLocation.setRotation(rotation);
       newLocation.setPitch(pitch);
-      System.out.println(newLocation);
       return newLocation;
     }
   }
