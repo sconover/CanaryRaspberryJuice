@@ -49,7 +49,7 @@ public class TestCanaryModServer {
       String projectRootDir = new File("../../").getAbsolutePath();
 
       FileUtils.copyDirectory(
-          new File(projectRootDir, "src/test/resources/server-overlay"),
+          new File(projectRootDir, "test/resources/server-overlay"),
           new File(projectRootDir, "target/server-root"));
 
       System.setProperty("java.awt.headless", "true");
