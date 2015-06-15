@@ -57,7 +57,7 @@ public class TestCanaryModServer {
 
       TestPluginDescriptor helloPluginDescriptor =
           new TestPluginDescriptor(
-              new File(projectRootDir, "classes/production/CanaryRaspberryJuice").getAbsolutePath(),
+              new File(projectRootDir, "classes/production/main").getAbsolutePath(),
               new LinkedHashMap<String, String>(){{
                 put("main-class", "mctest.hello.HelloPlugin");
                 put("name", "HelloPlugin");
@@ -67,7 +67,7 @@ public class TestCanaryModServer {
 
       TestPluginDescriptor raspberryJuicePluginDescriptor =
           new TestPluginDescriptor(
-              new File(projectRootDir, "classes/production/CanaryRaspberryJuice").getAbsolutePath(),
+              new File(projectRootDir, "classes/production/main").getAbsolutePath(),
               new LinkedHashMap<String, String>(){{
                 put("main-class", "com.stuffaboutcode.canaryraspberryjuice.CanaryRaspberryJuicePlugin");
                 put("name", "CanaryRaspberryJuicePlugin");
@@ -77,7 +77,7 @@ public class TestCanaryModServer {
 
       TestPluginDescriptor testRunnerDescriptor =
           new TestPluginDescriptor(
-              new File(projectRootDir, "classes/production/CanaryRaspberryJuice").getAbsolutePath(),
+              new File(projectRootDir, "classes/production/test").getAbsolutePath(),
               new LinkedHashMap<String, String>(){{
                 put("main-class", "com.stuffaboutcode.canaryraspberryjuicetest.TestRunnerPlugin");
                 put("name", "TestRunnerPlugin");

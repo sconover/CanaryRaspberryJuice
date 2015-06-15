@@ -1,6 +1,7 @@
 package com.stuffaboutcode.canaryraspberryjuicetest;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.stuffaboutcode.canaryraspberryjuice.CommandHandler;
@@ -76,13 +77,15 @@ public class FooTest {
     //sign.setTextOnLine("zzz", 2);
     //sign.setTextOnLine("yyy", 3);
 
-    serverHelper.getFirstPlayer().teleportTo(
-        LocationHelper.getLocationFacingPosition(testPosition, 0, 10, -30));
-    try {
-      Thread.sleep(500);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+    if (serverHelper.hasPlayers()) {
+      serverHelper.getFirstPlayer().teleportTo(
+          LocationHelper.getLocationFacingPosition(testPosition, 0, 10, -30));
     }
+    //try {
+    //  Thread.sleep(500);
+    //} catch (InterruptedException e) {
+    //  throw new RuntimeException(e);
+    //}
     xOffset += 30;
 
     return testPosition;
@@ -164,6 +167,66 @@ public class FooTest {
     assertEquals(
         Lists.newArrayList(String.valueOf(BlockType.RedstoneBlock.getId())),
         out.sends);
+  }
+
+  @Test
+  public void test_world_getBlocks() throws Exception {
+    Position p = nextTestPosition("world.getBlocks");
+    int px = (int)p.getX();
+    int py = (int)p.getY();
+    int pz = (int)p.getZ();
+
+    new CuboidReference(p, 3, 3, 3)
+        .fetchBlocks(serverHelper.getWorld())
+        .changeBlocksToType(BlockType.RedstoneBlock);
+
+    String redstoneBlockIdStr = String.valueOf(BlockType.RedstoneBlock.getId());
+    String twentySevernRedstoneBlocksString = Strings.repeat(redstoneBlockIdStr + ",", 26) + redstoneBlockIdStr;
+
+    TestOut out = new TestOut();
+    CommandHandler commandHandler =
+        new CommandHandler(
+            Canary.getServer(),
+            Logman.getLogman("FooTest-logman"),
+            out);
+
+    commandHandler.handleLine(
+        String.format("world.getBlocks(%d,%d,%d,%d,%d,%d)",
+            px + 0, py + 0, pz + 0,
+            px + 0, py + 0, pz + 0));
+    assertEquals(redstoneBlockIdStr, out.sends.get(0));
+
+    commandHandler.handleLine(
+        String.format("world.getBlocks(%d,%d,%d,%d,%d,%d)",
+            px + 0, py + 0, pz + 0,
+            px + 2, py + 2, pz + 2));
+    assertEquals(
+        twentySevernRedstoneBlocksString,
+        out.sends.get(1));
+
+    commandHandler.handleLine(
+        String.format("world.getBlocks(%d,%d,%d,%d,%d,%d)",
+            px + 2, py + 0, pz + 0,
+            px + 0, py + 2, pz + 2));
+    assertEquals(
+        twentySevernRedstoneBlocksString,
+        out.sends.get(2));
+
+    commandHandler.handleLine(
+        String.format("world.getBlocks(%d,%d,%d,%d,%d,%d)",
+            px + 2, py + 0, pz + 2,
+            px + 0, py + 2, pz + 0));
+    assertEquals(
+        twentySevernRedstoneBlocksString,
+        out.sends.get(3));
+
+    commandHandler.handleLine(
+        String.format("world.getBlocks(%d,%d,%d,%d,%d,%d)",
+            px + 0, py + 0, pz + 2,
+            px + 2, py + 2, pz + 0));
+    assertEquals(
+        twentySevernRedstoneBlocksString,
+        out.sends.get(4));
   }
 
   @Test
