@@ -24,7 +24,7 @@
     <outputDirectory>target/classes</outputDirectory>
     <testOutputDirectory>target/test-classes</testOutputDirectory>
 
-    <testSourceDirectory>test/java</testSourceDirectory>
+    <sourceDirectory>java</sourceDirectory>
 
 
     <plugins>
