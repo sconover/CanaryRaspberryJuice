@@ -25,17 +25,14 @@
   <build>
     <finalName>${artifactId}-${version}</finalName>
 
+    <sourceDirectory>main/java</sourceDirectory>
     <directory>target</directory>
     <outputDirectory>target/classes</outputDirectory>
-    <testOutputDirectory>target/test-classes</testOutputDirectory>
-
-    <sourceDirectory>src/main/java</sourceDirectory>
-    <testSourceDirectory>src/test/java</testSourceDirectory>
 
     <resources>
       <resource>
         <filtering>false</filtering>
-        <directory>src</directory>
+        <directory>main</directory>
         <includes>
           <include>Canary.inf</include>
         </includes>
@@ -66,76 +63,24 @@
           <value>${version}</value>
         </configuration>
       </plugin>
-
-      <!--<plugin>-->
-        <!--<groupId>org.apache.maven.plugins</groupId>-->
-        <!--<artifactId>maven-antrun-plugin</artifactId>-->
-        <!--<version>1.7</version>-->
-        <!--<executions>-->
-          <!--<execution>-->
-            <!--<id>download-canarymod-source-from-github</id>-->
-            <!--<phase>prepare-package</phase>-->
-            <!--<goals>-->
-              <!--<goal>run</goal>-->
-            <!--</goals>-->
-            <!--<configuration>-->
-              <!--<tasks>-->
-                <!--<mkdir dir="${project.build.directory}/sources"/>-->
-                <!--<get src="https://github.com/CanaryModTeam/CanaryMod/archive/${canarymod.minecraft.version}-${canarylib.version}.zip"-->
-                    <!--dest="${project.build.directory}/sources"-->
-                    <!--verbose="true"-->
-                    <!--usetimestamp="true"/>-->
-                <!--<unzip src="${project.build.directory}/sources/${canarymod.minecraft.version}-${canarylib.version}.zip"-->
-                    <!--dest="${project.build.directory}/sources"/>-->
-              <!--</tasks>-->
-            <!--</configuration>-->
-          <!--</execution>-->
-          <!--<execution>-->
-            <!--<id>make-server-root-dir</id>-->
-            <!--<phase>prepare-package</phase>-->
-            <!--<goals>-->
-              <!--<goal>run</goal>-->
-            <!--</goals>-->
-            <!--<configuration>-->
-              <!--<tasks>-->
-                <!--<mkdir dir="${project.build.directory}/server-root"/>-->
-              <!--</tasks>-->
-            <!--</configuration>-->
-          <!--</execution>-->
-        <!--</executions>-->
-      <!--</plugin>-->
     </plugins>
   </build>
 
   <dependencies>
-    <!--<dependency>-->
-      <!--<groupId>net.canarymod</groupId>-->
-      <!--<artifactId>CanaryLib</artifactId>-->
-      <!--<version>${canarylib.version}</version>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-      <!--<groupId>log4j</groupId>-->
-      <!--<artifactId>log4j</artifactId>-->
-      <!--<version>1.2.17</version>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-      <!--<groupId>net.visualillusionsent</groupId>-->
-      <!--<artifactId>viutils</artifactId>-->
-      <!--<version>1.3.0</version>-->
-    <!--</dependency>-->
-
-    <!-- test dependencies -->
-    <!--<dependency>-->
-      <!--<groupId>net.canarymod</groupId>-->
-      <!--<artifactId>CanaryMod</artifactId>-->
-      <!--<version>${canarymod.minecraft.version}-${canarylib.version}</version>-->
-      <!--<scope>test</scope>-->
-    <!--</dependency>-->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
+      <groupId>net.canarymod</groupId>
+      <artifactId>CanaryLib</artifactId>
+      <version>${canarylib.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+    <dependency>
+      <groupId>net.visualillusionsent</groupId>
+      <artifactId>viutils</artifactId>
+      <version>1.3.0</version>
     </dependency>
   </dependencies>
 
