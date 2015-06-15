@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/submodules/CanaryMod/CanaryMod.iml" filepath="$PROJECT_DIR$/submodules/CanaryMod/CanaryMod.iml" />
       <module fileurl="file://$PROJECT_DIR$/libs/canaryraspberryjuice-libs.iml" filepath="$PROJECT_DIR$/libs/canaryraspberryjuice-libs.iml" />
       <module fileurl="file://$PROJECT_DIR$/main/main.iml" filepath="$PROJECT_DIR$/main/main.iml" />
+      <module fileurl="file://$PROJECT_DIR$//root.iml" filepath="$PROJECT_DIR$//root.iml" />
       <module fileurl="file://$PROJECT_DIR$/test/test.iml" filepath="$PROJECT_DIR$/test/test.iml" />
     </modules>
   </component>
