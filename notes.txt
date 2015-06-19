@@ -1,3 +1,8 @@
+- extract command methods and annotate
+  - annotations that mark original / extended
+  - api doc annotations
+  - transform the annotations to api docs as part of the mvn package (put in the jar?)
+
 - maven
   - run "mvn dependency:sources" to get dependency jar sources
 - look into https://travis-ci.org/
