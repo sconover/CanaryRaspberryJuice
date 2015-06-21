@@ -1,6 +1,7 @@
 package com.stuffaboutcode.canaryraspberryjuicetest.support;
 
 import com.stuffaboutcode.canaryraspberryjuice.CommandHandler;
+import com.stuffaboutcode.canaryraspberryjuice.ServerHelper;
 import net.canarymod.Canary;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
@@ -48,6 +49,7 @@ public abstract class InWorldTestSupport {
     testOut = new TestOut();
     commandHandler = new CommandHandler(
         Canary.getServer(),
+        new ServerHelper(Canary.getServer()),
         Logman.getLogman("Test-logman"),
         testOut);
   }

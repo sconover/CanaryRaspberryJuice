@@ -1,4 +1,4 @@
-package com.stuffaboutcode.canaryraspberryjuicetest.support;
+package com.stuffaboutcode.canaryraspberryjuice;
 
 import com.google.common.base.Preconditions;
 import net.canarymod.api.Server;

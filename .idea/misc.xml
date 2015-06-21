@@ -9,7 +9,7 @@
         <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/test/pom.xml" />
         <option value="$PROJECT_DIR$/submodules/CanaryMod/pom.xml" />
-        <option value="$PROJECT_DIR$/libs/pom.xml" />
+        <option value="$PROJECT_DIR$/main/pom.xml" />
       </list>
     </option>
   </component>

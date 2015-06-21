@@ -1,3 +1,7 @@
+- include guava in "main" pluing module...
+  ...needs a pom.
+
+
 - extract command methods and annotate
   - annotations that mark original / extended
   - api doc annotations

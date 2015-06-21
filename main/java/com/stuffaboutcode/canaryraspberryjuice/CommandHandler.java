@@ -1,22 +1,32 @@
 package com.stuffaboutcode.canaryraspberryjuice;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
 import java.util.ArrayDeque;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import net.canarymod.api.Server;
 import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.World;
 import net.canarymod.api.world.blocks.Block;
+import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.api.world.position.Vector3D;
 import net.canarymod.hook.player.BlockRightClickHook;
 import net.canarymod.hook.player.ChatHook;
 import net.canarymod.logger.Logman;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class CommandHandler {
   // origin is the spawn location on the world
-  private Location origin;
-
+  private final Location origin;
   private final Server server;
+  private final ServerHelper serverHelper;
   private final Logman logman;
   private final RemoteSession.Out out;
 
@@ -25,11 +35,17 @@ public class CommandHandler {
   private final ArrayDeque<ChatHook> chatPostedQueue = new ArrayDeque<ChatHook>();
 
   private Player attachedPlayer;
+  private Map<String, Pair<Object, Method>> apiMethodNameToApiObjectAndMethod =
+      new LinkedHashMap<String, Pair<Object, Method>>();
 
-  public CommandHandler(Server server, Logman logman, RemoteSession.Out out) {
+  public CommandHandler(Server server, ServerHelper serverHelper, Logman logman, RemoteSession.Out out) {
     this.server = server;
+    this.serverHelper = serverHelper;
     this.logman = logman;
     this.out = out;
+    this.origin = getSpawnLocation();
+
+    registerApiMethods(new WorldApi(origin, serverHelper, logman, out));
   }
 
   public void handleLine(String line) {
@@ -41,24 +57,79 @@ public class CommandHandler {
     handleCommand(methodName, args);
   }
 
+  @Target(ElementType.METHOD)
+  @Retention(RetentionPolicy.RUNTIME)
+  public @interface MinecraftRemoteCall {
+    public String value();
+  }
+
+  class WorldApi {
+    // origin is the spawn location on the world
+    private final Location origin;
+    private final ServerHelper serverHelper;
+    private final Logman logman;
+
+    public WorldApi(Location origin, ServerHelper serverHelper, Logman logman,
+        RemoteSession.Out out) {
+      this.origin = origin;
+      this.serverHelper = serverHelper;
+      this.logman = logman;
+    }
+
+    //TODO: consider simple type conversion / validation...
+    @MinecraftRemoteCall("world.getBlock")
+    public BlockType worldGetBlock(String xStr, String yStr, String zStr) {
+      Location loc = parseRelativeBlockLocation(xStr, yStr, zStr);
+      return serverHelper.getWorld().getBlockAt(loc).getType();
+    }
+  }
+
+  private void registerApiMethods(Object api) {
+    for (Method m : api.getClass().getMethods()) {
+      if (m.isAnnotationPresent(MinecraftRemoteCall.class)) {
+        String apiMethodName = m.getDeclaredAnnotation(MinecraftRemoteCall.class).value();
+        apiMethodNameToApiObjectAndMethod.put(apiMethodName, ImmutablePair.of(api, m));
+      }
+    }
+  }
+
   protected void handleCommand(String c, String[] args) {
 
-    if (origin == null) this.origin = getSpawnLocation();
-
     try {
+      if (apiMethodNameToApiObjectAndMethod.containsKey(c)) {
+        Pair<Object, Method> apiObjectAndMethod = apiMethodNameToApiObjectAndMethod.get(c);
+        Object apiObject = apiObjectAndMethod.getLeft();
+        Method method = apiObjectAndMethod.getRight();
+
+        Object objectResult = method.invoke(apiObject, args);
+        String finalResult = null;
+
+        if (objectResult instanceof BlockType) {
+          finalResult = String.valueOf(((BlockType)objectResult).getId());
+        }
+
+        if (finalResult != null) {
+          send(finalResult);
+        }
+        return;
+      }
+
+
       // get the server
       Server server = getServer();
 
       // get the world
       World world = getWorld();
 
-      // world.getBlock
-      if (c.equals("world.getBlock")) {
-        Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
-        send(world.getBlockAt(loc).getTypeId());
-
-        // world.getBlocks
-      } else if (c.equals("world.getBlocks")) {
+      //// world.getBlock
+      //if (c.equals("world.getBlock")) {
+      //  Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+      //  send(world.getBlockAt(loc).getTypeId());
+      //
+      //  // world.getBlocks
+      //} else
+      //
+      if (c.equals("world.getBlocks")) {
         Location loc1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
         Location loc2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
         send(getBlocks(loc1, loc2));
