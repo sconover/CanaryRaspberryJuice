@@ -1,5 +1,6 @@
 package com.stuffaboutcode.canaryraspberryjuice;
 
+import com.google.common.base.Joiner;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -82,6 +83,18 @@ public class CommandHandler {
       Location loc = parseRelativeBlockLocation(xStr, yStr, zStr);
       return serverHelper.getWorld().getBlockAt(loc).getType();
     }
+
+    @MinecraftRemoteCall("world.getBlocks")
+    public BlockType[] worldGetBlocks(
+        String loc1XStr, String loc1YStr, String loc1ZStr,
+        String loc2XStr, String loc2YStr, String loc2ZStr) {
+
+        //TODO: convert all of this stuff to position
+        Location loc1 = parseRelativeBlockLocation(loc1XStr, loc1YStr, loc1ZStr);
+        Location loc2 = parseRelativeBlockLocation(loc2XStr, loc2YStr, loc2ZStr);
+
+      return serverHelper.getBlocks(loc1, loc2).toBlockTypeArray();
+    }
   }
 
   private void registerApiMethods(Object api) {
@@ -93,6 +106,25 @@ public class CommandHandler {
     }
   }
 
+  private String serializeApiResult(Object objectResult) {
+    if (objectResult instanceof BlockType) {
+      return String.valueOf(((BlockType)objectResult).getId());
+    } else if (objectResult instanceof BlockType[]) {
+      BlockType[] blockTypes = (BlockType[])objectResult;
+      String[] strings = new String[blockTypes.length];
+      for(int i=0; i<blockTypes.length; i++) {
+        strings[i] = serializeApiResult(blockTypes[i]);
+      }
+      return serializeApiResult(strings);
+    } else if (objectResult instanceof String[]) {
+      return Joiner.on(",").join((String[])objectResult);
+    }
+    throw new RuntimeException(String.format(
+        "not sure how to serialize %s %s",
+        objectResult.getClass().getName(),
+        objectResult.toString()));
+  }
+
   protected void handleCommand(String c, String[] args) {
 
     try {
@@ -101,16 +133,12 @@ public class CommandHandler {
         Object apiObject = apiObjectAndMethod.getLeft();
         Method method = apiObjectAndMethod.getRight();
 
-        Object objectResult = method.invoke(apiObject, args);
-        String finalResult = null;
-
-        if (objectResult instanceof BlockType) {
-          finalResult = String.valueOf(((BlockType)objectResult).getId());
+        if (method.getReturnType().equals(Void.TYPE)) {
+          method.invoke(apiObject, args);
+        } else {
+          send(serializeApiResult(method.invoke(apiObject, args)));
         }
 
-        if (finalResult != null) {
-          send(finalResult);
-        }
         return;
       }
 
@@ -121,21 +149,7 @@ public class CommandHandler {
       // get the world
       World world = getWorld();
 
-      //// world.getBlock
-      //if (c.equals("world.getBlock")) {
-      //  Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
-      //  send(world.getBlockAt(loc).getTypeId());
-      //
-      //  // world.getBlocks
-      //} else
-      //
-      if (c.equals("world.getBlocks")) {
-        Location loc1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
-        Location loc2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
-        send(getBlocks(loc1, loc2));
-
-        // world.getBlockWithData
-      } else if (c.equals("world.getBlockWithData")) {
+      if (c.equals("world.getBlockWithData")) {
         Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
         send(world.getBlockAt(loc).getTypeId() + "," + world.getBlockAt(loc).getData());
 
