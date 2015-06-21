@@ -1,6 +1,5 @@
 package com.stuffaboutcode.canaryraspberryjuice;
 
-import com.google.common.base.Joiner;
 import com.stuffaboutcode.canaryraspberryjuice.apis.ExtendedWorldApi;
 import com.stuffaboutcode.canaryraspberryjuice.apis.OriginalWorldApi;
 import java.lang.reflect.Method;
@@ -12,7 +11,6 @@ import net.canarymod.api.Server;
 import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.World;
 import net.canarymod.api.world.blocks.Block;
-import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.api.world.position.Vector3D;
 import net.canarymod.hook.player.BlockRightClickHook;
@@ -49,15 +47,6 @@ public class CommandHandler {
     registerApiMethods(new ExtendedWorldApi(origin, serverHelper, logman));
   }
 
-  public void handleLine(String line) {
-    //System.out.println(line);
-    String methodName = line.substring(0, line.indexOf("("));
-    //split string into args, handles , inside " i.e. ","
-    String[] args = line.substring(line.indexOf("(") + 1, line.length() - 1).split(",");
-    //System.out.println(methodName + ":" + Arrays.toString(args));
-    handleCommand(methodName, args);
-  }
-
   private void registerApiMethods(Object api) {
     for (Method m : api.getClass().getMethods()) {
       if (m.isAnnotationPresent(MinecraftRemoteCall.class)) {
@@ -67,23 +56,13 @@ public class CommandHandler {
     }
   }
 
-  private String serializeApiResult(Object objectResult) {
-    if (objectResult instanceof BlockType) {
-      return String.valueOf(((BlockType) objectResult).getId());
-    } else if (objectResult instanceof BlockType[]) {
-      BlockType[] blockTypes = (BlockType[]) objectResult;
-      String[] strings = new String[blockTypes.length];
-      for (int i = 0; i < blockTypes.length; i++) {
-        strings[i] = serializeApiResult(blockTypes[i]);
-      }
-      return serializeApiResult(strings);
-    } else if (objectResult instanceof String[]) {
-      return Joiner.on(",").join((String[]) objectResult);
-    }
-    throw new RuntimeException(String.format(
-        "not sure how to serialize %s %s",
-        objectResult.getClass().getName(),
-        objectResult.toString()));
+  public void handleLine(String line) {
+    //System.out.println(line);
+    String methodName = line.substring(0, line.indexOf("("));
+    //split string into args, handles , inside " i.e. ","
+    String[] args = line.substring(line.indexOf("(") + 1, line.length() - 1).split(",");
+    //System.out.println(methodName + ":" + Arrays.toString(args));
+    handleCommand(methodName, args);
   }
 
   protected void handleCommand(String c, String[] args) {
@@ -97,7 +76,7 @@ public class CommandHandler {
         if (method.getReturnType().equals(Void.TYPE)) {
           method.invoke(apiObject, args);
         } else {
-          send(serializeApiResult(method.invoke(apiObject, args)));
+          send(ApiResultSerializer.serialize(method.invoke(apiObject, args)));
         }
 
         return;
