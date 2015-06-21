@@ -73,10 +73,12 @@ public class CommandHandler {
         Object apiObject = apiObjectAndMethod.getLeft();
         Method method = apiObjectAndMethod.getRight();
 
+        Object[] convertedArgs = ApiIO.convertArguments(args, method);
+
         if (method.getReturnType().equals(Void.TYPE)) {
-          method.invoke(apiObject, args);
+          method.invoke(apiObject, convertedArgs);
         } else {
-          send(ApiResultSerializer.serialize(method.invoke(apiObject, args)));
+          send(ApiIO.serializeResult(method.invoke(apiObject, convertedArgs)));
         }
 
         return;

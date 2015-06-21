@@ -69,10 +69,7 @@ public class ServerHelper {
     return new Blocks(blockList);
   }
 
-  public Location parseRelativeBlockLocation(Location origin, String xstr, String ystr, String zstr) {
-    int x = (int) Double.parseDouble(xstr);
-    int y = (int) Double.parseDouble(ystr);
-    int z = (int) Double.parseDouble(zstr);
+  public Location parseRelativeBlockLocation(Location origin, int x, int y, int z) {
     return new Location(getWorld(), origin.getBlockX() + x, origin.getBlockY() + y,
         origin.getBlockZ() + z, 0f, 0f);
   }

@@ -20,14 +20,14 @@ public class ExtendedWorldApi {
 
   @MinecraftRemoteCall("world.getBlocks")
   public BlockType[] worldGetBlocks(
-      String loc1XStr, String loc1YStr, String loc1ZStr,
-      String loc2XStr, String loc2YStr, String loc2ZStr) {
+      int x1, int y1, int z1,
+      int x2, int y2, int z2) {
 
     //TODO: convert all of this stuff to position
     Location loc1 =
-        serverHelper.parseRelativeBlockLocation(origin, loc1XStr, loc1YStr, loc1ZStr);
+        serverHelper.parseRelativeBlockLocation(origin, x1, y1, z1);
     Location loc2 =
-        serverHelper.parseRelativeBlockLocation(origin, loc2XStr, loc2YStr, loc2ZStr);
+        serverHelper.parseRelativeBlockLocation(origin, x2, y2, z2);
 
     return serverHelper.getBlocks(loc1, loc2).toBlockTypeArray();
   }

@@ -20,8 +20,8 @@ public class OriginalWorldApi {
 
   //TODO: consider simple type conversion / validation...
   @MinecraftRemoteCall("world.getBlock")
-  public BlockType worldGetBlock(String xStr, String yStr, String zStr) {
-    Location loc = serverHelper.parseRelativeBlockLocation(origin, xStr, yStr, zStr);
+  public BlockType worldGetBlock(int x, int y, int z) {
+    Location loc = serverHelper.parseRelativeBlockLocation(origin, x, y, z);
     return serverHelper.getWorld().getBlockAt(loc).getType();
   }
 }
