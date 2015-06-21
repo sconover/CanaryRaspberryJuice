@@ -1,10 +1,8 @@
 package com.stuffaboutcode.canaryraspberryjuice;
 
 import com.google.common.base.Joiner;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.stuffaboutcode.canaryraspberryjuice.apis.ExtendedWorldApi;
+import com.stuffaboutcode.canaryraspberryjuice.apis.OriginalWorldApi;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
@@ -32,21 +30,23 @@ public class CommandHandler {
   private final RemoteSession.Out out;
 
   private final ArrayDeque<BlockRightClickHook> blockHitQueue =
-			new ArrayDeque<BlockRightClickHook>();
+      new ArrayDeque<BlockRightClickHook>();
   private final ArrayDeque<ChatHook> chatPostedQueue = new ArrayDeque<ChatHook>();
 
   private Player attachedPlayer;
   private Map<String, Pair<Object, Method>> apiMethodNameToApiObjectAndMethod =
       new LinkedHashMap<String, Pair<Object, Method>>();
 
-  public CommandHandler(Server server, ServerHelper serverHelper, Logman logman, RemoteSession.Out out) {
+  public CommandHandler(Server server, ServerHelper serverHelper, Logman logman,
+      RemoteSession.Out out) {
     this.server = server;
     this.serverHelper = serverHelper;
     this.logman = logman;
     this.out = out;
     this.origin = getSpawnLocation();
 
-    registerApiMethods(new WorldApi(origin, serverHelper, logman, out));
+    registerApiMethods(new OriginalWorldApi(origin, serverHelper, logman));
+    registerApiMethods(new ExtendedWorldApi(origin, serverHelper, logman));
   }
 
   public void handleLine(String line) {
@@ -56,45 +56,6 @@ public class CommandHandler {
     String[] args = line.substring(line.indexOf("(") + 1, line.length() - 1).split(",");
     //System.out.println(methodName + ":" + Arrays.toString(args));
     handleCommand(methodName, args);
-  }
-
-  @Target(ElementType.METHOD)
-  @Retention(RetentionPolicy.RUNTIME)
-  public @interface MinecraftRemoteCall {
-    public String value();
-  }
-
-  class WorldApi {
-    // origin is the spawn location on the world
-    private final Location origin;
-    private final ServerHelper serverHelper;
-    private final Logman logman;
-
-    public WorldApi(Location origin, ServerHelper serverHelper, Logman logman,
-        RemoteSession.Out out) {
-      this.origin = origin;
-      this.serverHelper = serverHelper;
-      this.logman = logman;
-    }
-
-    //TODO: consider simple type conversion / validation...
-    @MinecraftRemoteCall("world.getBlock")
-    public BlockType worldGetBlock(String xStr, String yStr, String zStr) {
-      Location loc = parseRelativeBlockLocation(xStr, yStr, zStr);
-      return serverHelper.getWorld().getBlockAt(loc).getType();
-    }
-
-    @MinecraftRemoteCall("world.getBlocks")
-    public BlockType[] worldGetBlocks(
-        String loc1XStr, String loc1YStr, String loc1ZStr,
-        String loc2XStr, String loc2YStr, String loc2ZStr) {
-
-        //TODO: convert all of this stuff to position
-        Location loc1 = parseRelativeBlockLocation(loc1XStr, loc1YStr, loc1ZStr);
-        Location loc2 = parseRelativeBlockLocation(loc2XStr, loc2YStr, loc2ZStr);
-
-      return serverHelper.getBlocks(loc1, loc2).toBlockTypeArray();
-    }
   }
 
   private void registerApiMethods(Object api) {
@@ -108,16 +69,16 @@ public class CommandHandler {
 
   private String serializeApiResult(Object objectResult) {
     if (objectResult instanceof BlockType) {
-      return String.valueOf(((BlockType)objectResult).getId());
+      return String.valueOf(((BlockType) objectResult).getId());
     } else if (objectResult instanceof BlockType[]) {
-      BlockType[] blockTypes = (BlockType[])objectResult;
+      BlockType[] blockTypes = (BlockType[]) objectResult;
       String[] strings = new String[blockTypes.length];
-      for(int i=0; i<blockTypes.length; i++) {
+      for (int i = 0; i < blockTypes.length; i++) {
         strings[i] = serializeApiResult(blockTypes[i]);
       }
       return serializeApiResult(strings);
     } else if (objectResult instanceof String[]) {
-      return Joiner.on(",").join((String[])objectResult);
+      return Joiner.on(",").join((String[]) objectResult);
     }
     throw new RuntimeException(String.format(
         "not sure how to serialize %s %s",
@@ -142,7 +103,6 @@ public class CommandHandler {
         return;
       }
 
-
       // get the server
       Server server = getServer();
 
@@ -150,19 +110,19 @@ public class CommandHandler {
       World world = getWorld();
 
       if (c.equals("world.getBlockWithData")) {
-        Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+        Location loc = parseRelativeBlockLocation(origin, args[0], args[1], args[2]);
         send(world.getBlockAt(loc).getTypeId() + "," + world.getBlockAt(loc).getData());
 
         // world.setBlock
       } else if (c.equals("world.setBlock")) {
-        Location loc = parseRelativeBlockLocation(args[0], args[1], args[2]);
+        Location loc = parseRelativeBlockLocation(origin, args[0], args[1], args[2]);
         updateBlock(world, loc, Short.parseShort(args[3]),
-						args.length > 4 ? Short.parseShort(args[4]) : (short) 0);
+            args.length > 4 ? Short.parseShort(args[4]) : (short) 0);
 
         // world.setBlocks
       } else if (c.equals("world.setBlocks")) {
-        Location loc1 = parseRelativeBlockLocation(args[0], args[1], args[2]);
-        Location loc2 = parseRelativeBlockLocation(args[3], args[4], args[5]);
+        Location loc1 = parseRelativeBlockLocation(origin, args[0], args[1], args[2]);
+        Location loc2 = parseRelativeBlockLocation(origin, args[3], args[4], args[5]);
         short blockType = Short.parseShort(args[6]);
         short data = args.length > 7 ? Short.parseShort(args[7]) : (short) 0;
         setCuboid(loc1, loc2, blockType, data);
@@ -254,15 +214,15 @@ public class CommandHandler {
         String name = null, x = args[0], y = args[1], z = args[2];
         if (args.length > 3) {
           name = args[0];
-					x = args[1];
-					y = args[2];
-					z = args[3];
+          x = args[1];
+          y = args[2];
+          z = args[3];
         }
         Player currentPlayer = getCurrentPlayer(name);
         //get players current location, so when they are moved we will use the same pitch and yaw (rotation)
         Location loc = currentPlayer.getLocation();
         currentPlayer.teleportTo(
-						parseRelativeBlockLocation(x, y, z, loc.getPitch(), loc.getRotation()));
+            parseRelativeBlockLocation(x, y, z, loc.getPitch(), loc.getRotation()));
 
         // player.getPos
       } else if (c.equals("player.getPos")) {
@@ -278,15 +238,15 @@ public class CommandHandler {
         String name = null, x = args[0], y = args[1], z = args[2];
         if (args.length > 3) {
           name = args[0];
-					x = args[1];
-					y = args[2];
-					z = args[3];
+          x = args[1];
+          y = args[2];
+          z = args[3];
         }
         Player currentPlayer = getCurrentPlayer(name);
         //get players current location, so when they are moved we will use the same pitch and yaw (rotation)
         Location loc = currentPlayer.getLocation();
         currentPlayer.teleportTo(
-						parseRelativeLocation(x, y, z, loc.getPitch(), loc.getRotation()));
+            parseRelativeLocation(x, y, z, loc.getPitch(), loc.getRotation()));
 
         // player.getDirection
       } else if (c.equals("player.getDirection")) {
@@ -318,7 +278,7 @@ public class CommandHandler {
 
         // world.getHeight
       } else if (c.equals("world.getHeight")) {
-        Location loc = parseRelativeBlockLocation(args[0], "0", args[1]);
+        Location loc = parseRelativeBlockLocation(origin, args[0], "0", args[1]);
         send(world.getHighestBlockAt(loc.getBlockX(), loc.getBlockZ()) - origin.getBlockY());
 
         // entity.getTile
@@ -342,7 +302,7 @@ public class CommandHandler {
           //get entity's current location, so when they are moved we will use the same pitch and yaw (rotation)
           Location loc = entity.getLocation();
           entity.teleportTo(
-							parseRelativeBlockLocation(x, y, z, loc.getPitch(), loc.getRotation()));
+              parseRelativeBlockLocation(x, y, z, loc.getPitch(), loc.getRotation()));
         } else {
           logman.info("Entity [" + args[0] + "] not found.");
           send("Fail");
@@ -422,7 +382,7 @@ public class CommandHandler {
       logman.warn("Error occured handling command");
       e.printStackTrace();
       send("Fail");
-		}
+    }
   }
 
   public void send(Object a) {
@@ -455,8 +415,8 @@ public class CommandHandler {
   public Player getHostPlayer() {
     List<Player> allPlayers = getServer().getPlayerList();
     if (allPlayers.size() >= 1) {
-			return allPlayers.iterator().next();
-		}
+      return allPlayers.iterator().next();
+    }
     return null;
   }
 
@@ -526,7 +486,7 @@ public class CommandHandler {
     }
 
     return blockData.substring(0,
-				blockData.length() > 0 ? blockData.length() - 1 : 0);  // We don't want last comma
+        blockData.length() > 0 ? blockData.length() - 1 : 0);  // We don't want last comma
   }
 
   // updates a block
@@ -565,12 +525,13 @@ public class CommandHandler {
     return player;
   }
 
-  public Location parseRelativeBlockLocation(String xstr, String ystr, String zstr) {
+  public Location parseRelativeBlockLocation(Location origin, String xstr, String ystr,
+      String zstr) {
     int x = (int) Double.parseDouble(xstr);
     int y = (int) Double.parseDouble(ystr);
     int z = (int) Double.parseDouble(zstr);
     return new Location(getWorld(), origin.getBlockX() + x, origin.getBlockY() + y,
-				origin.getBlockZ() + z, 0f, 0f);
+        origin.getBlockZ() + z, 0f, 0f);
   }
 
   public Location parseRelativeLocation(String xstr, String ystr, String zstr) {
@@ -578,19 +539,19 @@ public class CommandHandler {
     double y = Double.parseDouble(ystr);
     double z = Double.parseDouble(zstr);
     return new Location(getWorld(), origin.getBlockX() + x, origin.getBlockY() + y,
-				origin.getBlockZ() + z, 0f, 0f);
+        origin.getBlockZ() + z, 0f, 0f);
   }
 
   public Location parseRelativeBlockLocation(String xstr, String ystr, String zstr, float pitch,
-			float yaw) {
-    Location loc = parseRelativeBlockLocation(xstr, ystr, zstr);
+      float yaw) {
+    Location loc = parseRelativeBlockLocation(origin, xstr, ystr, zstr);
     loc.setPitch(pitch);
     loc.setRotation(yaw);
     return loc;
   }
 
   public Location parseRelativeLocation(String xstr, String ystr, String zstr, float pitch,
-			float yaw) {
+      float yaw) {
     Location loc = parseRelativeLocation(xstr, ystr, zstr);
     loc.setPitch(pitch);
     loc.setRotation(yaw);
@@ -599,10 +560,10 @@ public class CommandHandler {
 
   public String blockLocationToRelative(Location loc) {
     return (loc.getBlockX() - origin.getBlockX())
-				+ ","
-				+ (loc.getBlockY() - origin.getBlockY())
-				+ ","
-				+
+        + ","
+        + (loc.getBlockY() - origin.getBlockY())
+        + ","
+        +
         (loc.getBlockZ() - origin.getBlockZ());
   }
 
