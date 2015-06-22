@@ -33,8 +33,8 @@ public class CommandHandler {
   private final ArrayDeque<ChatHook> chatPostedQueue = new ArrayDeque<ChatHook>();
 
   private Player attachedPlayer;
-  private Map<String, Pair<Object, Method>> apiMethodNameToApiObjectAndMethod =
-      new LinkedHashMap<String, Pair<Object, Method>>();
+  private Map<Pair<String, Integer>, Pair<Object, Method>> apiMethodNameToApiObjectAndMethod =
+      new LinkedHashMap<Pair<String, Integer>, Pair<Object, Method>>();
 
   public CommandHandler(Server server, ServerHelper serverHelper, Logman logman,
       RemoteSession.Out out) {
@@ -52,7 +52,9 @@ public class CommandHandler {
     for (Method m : api.getClass().getMethods()) {
       if (m.isAnnotationPresent(MinecraftRemoteCall.class)) {
         String apiMethodName = m.getDeclaredAnnotation(MinecraftRemoteCall.class).value();
-        apiMethodNameToApiObjectAndMethod.put(apiMethodName, ImmutablePair.of(api, m));
+        apiMethodNameToApiObjectAndMethod.put(
+            ImmutablePair.of(apiMethodName, m.getParameterCount()),
+            ImmutablePair.of(api, m));
       }
     }
   }
@@ -69,8 +71,9 @@ public class CommandHandler {
   protected void handleCommand(String c, String[] args) {
 
     try {
-      if (apiMethodNameToApiObjectAndMethod.containsKey(c)) {
-        Pair<Object, Method> apiObjectAndMethod = apiMethodNameToApiObjectAndMethod.get(c);
+      Pair<String, Integer> key = ImmutablePair.of(c, args.length);
+      if (apiMethodNameToApiObjectAndMethod.containsKey(key)) {
+        Pair<Object, Method> apiObjectAndMethod = apiMethodNameToApiObjectAndMethod.get(key);
         Object apiObject = apiObjectAndMethod.getLeft();
         Method method = apiObjectAndMethod.getRight();
 
@@ -90,14 +93,16 @@ public class CommandHandler {
 
       // get the world
       World world = getWorld();
-
-      if (c.equals("world.setBlock")) {
-        Location loc = parseRelativeBlockLocation(origin, args[0], args[1], args[2]);
-        updateBlock(world, loc, Short.parseShort(args[3]),
-            args.length > 4 ? Short.parseShort(args[4]) : (short) 0);
-
-        // world.setBlocks
-      } else if (c.equals("world.setBlocks")) {
+      //
+      //if (c.equals("world.setBlock")) {
+      //  Location loc = parseRelativeBlockLocation(origin, args[0], args[1], args[2]);
+      //  updateBlock(world, loc, Short.parseShort(args[3]),
+      //      args.length > 4 ? Short.parseShort(args[4]) : (short) 0);
+      //
+      //  // world.setBlocks
+      //} else
+      //
+      if (c.equals("world.setBlocks")) {
         Location loc1 = parseRelativeBlockLocation(origin, args[0], args[1], args[2]);
         Location loc2 = parseRelativeBlockLocation(origin, args[3], args[4], args[5]);
         short blockType = Short.parseShort(args[6]);
@@ -482,6 +487,7 @@ public class CommandHandler {
     if ((thisBlock.getTypeId() != blockType) || (thisBlock.getData() != blockData)) {
       thisBlock.setTypeId(blockType);
       if (blockData > 0) {
+        // TODO: will need to handle more types of "data"
         thisBlock.setPropertyValue(thisBlock.getPropertyForName("color"), EnumDyeColor.b(blockData));
       }
       thisBlock.update();

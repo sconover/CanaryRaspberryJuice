@@ -2,6 +2,7 @@ package com.stuffaboutcode.canaryraspberryjuice.apis;
 
 import com.stuffaboutcode.canaryraspberryjuice.MinecraftRemoteCall;
 import com.stuffaboutcode.canaryraspberryjuice.ServerHelper;
+import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.logger.Logman;
@@ -34,5 +35,16 @@ public class OriginalWorldApi {
         serverHelper.getWorld().getBlockAt(loc).getType().getData());
   }
 
+  @MinecraftRemoteCall("world.setBlock")
+  public void setBlock(int x, int y, int z, short blockTypeId) {
+    setBlock(x, y, z, blockTypeId, (short)0);
+  }
 
+  @MinecraftRemoteCall("world.setBlock")
+  public void setBlock(int x, int y, int z, short blockTypeId, short blockData) {
+    Location loc = serverHelper.parseRelativeBlockLocation(origin, x, y, z);
+    Block block = serverHelper.getWorld().getBlockAt(loc);
+    BlockType blockType = BlockType.fromIdAndData(blockTypeId, blockData);
+    serverHelper.updateBlock(block, blockType);
+  }
 }

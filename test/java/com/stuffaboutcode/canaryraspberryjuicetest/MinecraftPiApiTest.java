@@ -124,6 +124,6 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
         (int)p.getZ());
 
     assertEquals(BlockType.GreenWool, block2.getType());
-    assertEquals(BlockType.GreenWool.getData()  , block2.getType().getData());
+    assertEquals(BlockType.GreenWool.getData(), block2.getType().getData());
   }
 }

@@ -7,6 +7,7 @@ import net.canarymod.api.Server;
 import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.World;
 import net.canarymod.api.world.blocks.Block;
+import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.api.world.position.Position;
 
@@ -73,4 +74,18 @@ public class ServerHelper {
     return new Location(getWorld(), origin.getBlockX() + x, origin.getBlockY() + y,
         origin.getBlockZ() + z, 0f, 0f);
   }
+
+  public void updateBlock(Block block, BlockType blockType) {
+    // check to see if the block is different - otherwise leave it
+    // TODO latter or condition will blow up. Test this.
+    if (!block.getType().equals(blockType)) {
+      block.setType(blockType);
+      //if (blockData > 0) {
+      //  // TODO: will need to handle more types of "data"
+      //  block.setPropertyValue(block.getPropertyForName("color"), EnumDyeColor.b(blockData));
+      //}
+      block.update();
+    }
+  }
+
 }
