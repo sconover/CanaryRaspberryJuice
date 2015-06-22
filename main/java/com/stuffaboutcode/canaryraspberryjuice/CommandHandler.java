@@ -90,12 +90,7 @@ public class CommandHandler {
       // get the world
       World world = getWorld();
 
-      if (c.equals("world.getBlockWithData")) {
-        Location loc = parseRelativeBlockLocation(origin, args[0], args[1], args[2]);
-        send(world.getBlockAt(loc).getTypeId() + "," + world.getBlockAt(loc).getType().getData());
-
-        // world.setBlock
-      } else if (c.equals("world.setBlock")) {
+      if (c.equals("world.setBlock")) {
         Location loc = parseRelativeBlockLocation(origin, args[0], args[1], args[2]);
         updateBlock(world, loc, Short.parseShort(args[3]),
             args.length > 4 ? Short.parseShort(args[4]) : (short) 0);
