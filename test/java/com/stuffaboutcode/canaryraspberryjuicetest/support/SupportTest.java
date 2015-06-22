@@ -93,12 +93,14 @@ public class SupportTest extends InWorldTestSupport {
 
   @Test
   public void testMovePlayer() throws Exception {
-    CuboidReference ref = new CuboidReference(new Position(1, 100, 1), 5, 5, 5);
-    Cuboid goldCube = ref.fetchBlocks(getServerHelper().getWorld());
-    goldCube.changeBlocksToType(BlockType.GoldBlock);
-    getServerHelper().getFirstPlayer().teleportTo(
-        LocationHelper.getLocationFacingPosition(new Position(1, 100, 1), 30, 10, 0));
+    if (getServerHelper().hasPlayers()) {
+      CuboidReference ref = new CuboidReference(new Position(1, 100, 1), 5, 5, 5);
+      Cuboid goldCube = ref.fetchBlocks(getServerHelper().getWorld());
+      goldCube.changeBlocksToType(BlockType.GoldBlock);
+      getServerHelper().getFirstPlayer().teleportTo(
+          LocationHelper.getLocationFacingPosition(new Position(1, 100, 1), 30, 10, 0));
 
-    assertEquals(new Position(31, 110, 1), getServerHelper().getFirstPlayer().getPosition());
+      assertEquals(new Position(31, 110, 1), getServerHelper().getFirstPlayer().getPosition());
+    }
   }
 }
