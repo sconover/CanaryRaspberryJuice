@@ -95,4 +95,35 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
             BlockType.GreenWool.getData()),
         getTestOut().sends.get(1));
   }
+
+  @Test
+  public void test_world_setBlock() throws Exception {
+    Position p = nextTestPosition("world.setBlock");
+
+    getCommandHandler().handleLine(
+        String.format("world.setBlock(%d,%d,%d,%d)",
+            (int) p.getX(),
+            (int) p.getY(),
+            (int) p.getZ(),
+            BlockType.RedstoneBlock.getId()));
+
+    Block block = getServerHelper().getWorld().getBlockAt(p);
+    assertEquals(BlockType.RedstoneBlock, block.getType());
+
+    getCommandHandler().handleLine(
+        String.format("world.setBlock(%d,%d,%d,%d,%d)",
+            (int) p.getX() + 1,
+            (int) p.getY(),
+            (int) p.getZ(),
+            BlockType.GreenWool.getId(),
+            BlockType.GreenWool.getData()));
+
+    Block block2 = getServerHelper().getWorld().getBlockAt(
+        (int)p.getX() + 1,
+        (int)p.getY(),
+        (int)p.getZ());
+
+    assertEquals(BlockType.GreenWool, block2.getType());
+    assertEquals(BlockType.GreenWool.getData()  , block2.getType().getData());
+  }
 }

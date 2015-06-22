@@ -16,6 +16,7 @@ import net.canarymod.api.world.position.Vector3D;
 import net.canarymod.hook.player.BlockRightClickHook;
 import net.canarymod.hook.player.ChatHook;
 import net.canarymod.logger.Logman;
+import net.minecraft.item.EnumDyeColor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -480,7 +481,9 @@ public class CommandHandler {
     // check to see if the block is different - otherwise leave it
     if ((thisBlock.getTypeId() != blockType) || (thisBlock.getData() != blockData)) {
       thisBlock.setTypeId(blockType);
-      thisBlock.setData(blockData);
+      if (blockData > 0) {
+        thisBlock.setPropertyValue(thisBlock.getPropertyForName("color"), EnumDyeColor.b(blockData));
+      }
       thisBlock.update();
     }
   }

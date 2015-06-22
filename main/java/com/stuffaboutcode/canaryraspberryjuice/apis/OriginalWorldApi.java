@@ -20,7 +20,6 @@ public class OriginalWorldApi {
     this.logman = logman;
   }
 
-  //TODO: consider simple type conversion / validation...
   @MinecraftRemoteCall("world.getBlock")
   public BlockType worldGetBlock(int x, int y, int z) {
     Location loc = serverHelper.parseRelativeBlockLocation(origin, x, y, z);
@@ -34,4 +33,6 @@ public class OriginalWorldApi {
         serverHelper.getWorld().getBlockAt(loc).getType(),
         serverHelper.getWorld().getBlockAt(loc).getType().getData());
   }
+
+
 }
