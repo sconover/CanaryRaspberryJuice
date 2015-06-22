@@ -1,8 +1,11 @@
 package com.stuffaboutcode.canaryraspberryjuicetest;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.stuffaboutcode.canaryraspberryjuice.Blocks;
 import com.stuffaboutcode.canaryraspberryjuicetest.support.FileHelper;
 import com.stuffaboutcode.canaryraspberryjuicetest.support.InWorldTestSupport;
+import java.util.Map;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Position;
@@ -125,5 +128,71 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
 
     assertEquals(BlockType.GreenWool, block2.getType());
     assertEquals(BlockType.GreenWool.getData(), block2.getType().getData());
+  }
+
+  @Test
+  public void test_world_setBlocks() throws Exception {
+    Position cubeCorner = nextTestPosition("world.setBlocks");
+
+    Position otherCubeCorner =
+        new Position(
+            cubeCorner.getX() + 1,
+            cubeCorner.getY() + 1,
+            cubeCorner.getZ() + 1);
+
+    getCommandHandler().handleLine(
+        String.format("world.setBlocks(%d,%d,%d,%d,%d,%d,%d)",
+            (int) cubeCorner.getX(),
+            (int) cubeCorner.getY(),
+            (int) cubeCorner.getZ(),
+            (int) otherCubeCorner.getX(),
+            (int) otherCubeCorner.getY(),
+            (int) otherCubeCorner.getZ(),
+            BlockType.RedstoneBlock.getId()));
+
+    Map<BlockType, Blocks> blockTypeToBlocks =
+        getServerHelper().getBlocks(
+        cubeCorner, otherCubeCorner).toBlockTypeToBlocks();
+
+    // there's a 2x2x2 set of redstone blocks
+    assertEquals(Sets.newHashSet(BlockType.RedstoneBlock), blockTypeToBlocks.keySet());
+    assertEquals(8, blockTypeToBlocks.get(BlockType.RedstoneBlock).size());
+
+    Position pastOtherCubeCorner =
+        new Position(
+            cubeCorner.getX() + 2,
+            cubeCorner.getY() + 2,
+            cubeCorner.getZ() + 2);
+
+    Map<BlockType, Blocks> blockTypeToBlocks2 =
+        getServerHelper().getBlocks(
+            cubeCorner, pastOtherCubeCorner).toBlockTypeToBlocks();
+
+    // out of this 3x3x3 cube, there's a 2x2x2 set of redstone blocks,
+    // and the rest is air
+    assertEquals(Sets.newHashSet(
+        BlockType.RedstoneBlock,
+        BlockType.Air),
+        blockTypeToBlocks2.keySet());
+    assertEquals(8, blockTypeToBlocks2.get(BlockType.RedstoneBlock).size());
+    assertEquals(27-8, blockTypeToBlocks2.get(BlockType.Air).size());
+
+    //assertEquals(BlockType.RedstoneBlock, block.getType());
+    //
+    //getCommandHandler().handleLine(
+    //    String.format("world.setBlock(%d,%d,%d,%d,%d)",
+    //        (int) cubeCorner.getX() + 1,
+    //        (int) cubeCorner.getY(),
+    //        (int) cubeCorner.getZ(),
+    //        BlockType.GreenWool.getId(),
+    //        BlockType.GreenWool.getData()));
+    //
+    //Block block2 = getServerHelper().getWorld().getBlockAt(
+    //    (int)cubeCorner.getX() + 1,
+    //    (int)cubeCorner.getY(),
+    //    (int)cubeCorner.getZ());
+    //
+    //assertEquals(BlockType.GreenWool, block2.getType());
+    //assertEquals(BlockType.GreenWool.getData(), block2.getType().getData());
   }
 }
