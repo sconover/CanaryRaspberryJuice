@@ -1,8 +1,10 @@
 package com.stuffaboutcode.canaryraspberryjuicetest;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.stuffaboutcode.canaryraspberryjuice.CuboidReference;
 import com.stuffaboutcode.canaryraspberryjuicetest.support.InWorldTestSupport;
+import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Position;
 import org.junit.Test;
@@ -64,5 +66,19 @@ public class ExtendedApiTest  extends InWorldTestSupport {
     assertEquals(
         twentySevernRedstoneBlocksString,
         getTestOut().sends.get(4));
+  }
+
+  @Test
+  public void test_world_getPlayerEntityId() throws Exception {
+    if (getServerHelper().hasPlayers()) {
+      Player firstPlayer = getServerHelper().getFirstPlayer();
+
+      getCommandHandler().handleLine(
+          String.format("world.getPlayerEntityId(%s)", firstPlayer.getName()));
+
+      assertEquals(
+          Lists.newArrayList(String.valueOf(firstPlayer.getID())),
+          getTestOut().sends);
+    }
   }
 }

@@ -94,7 +94,7 @@ public class CommandHandler {
       // get the world
       World world = getWorld();
 
-      if (c.equals("world.getPlayerIds")) {
+      if (c.equals("world.getPlayerEntityIds")) {
         StringBuilder bdr = new StringBuilder();
         for (Player p : server.getPlayerList()) {
           bdr.append(p.getID());
@@ -104,7 +104,7 @@ public class CommandHandler {
         send(bdr.toString());
 
         // world.getPlayerId
-      } else if (c.equals("world.getPlayerId")) {
+      } else if (c.equals("world.getPlayerEntityId")) {
         Player p = getNamedPlayer(args[0]);
         if (p != null) {
           send(p.getID());

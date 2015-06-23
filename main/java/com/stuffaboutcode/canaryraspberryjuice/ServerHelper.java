@@ -1,13 +1,13 @@
 package com.stuffaboutcode.canaryraspberryjuice;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import net.canarymod.api.Server;
 import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.World;
 import net.canarymod.api.world.blocks.Block;
-import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.api.world.position.Position;
 
@@ -42,11 +42,16 @@ public class ServerHelper {
     return server.getPlayerList().get(0);
   }
 
+  public List<Player> getPlayers() {
+    return ImmutableList.copyOf(server.getPlayerList());
+  }
+
   // get the host player, i.e. the first player on the server
   public boolean hasPlayers() {
     return !server.getPlayerList().isEmpty();
   }
 
+  // TODO: kill
   // get a cuboid of lots of blocks
   public Blocks getBlocks(Position loc1, Position loc2) {
     List<Block> blockList = new ArrayList<Block>();
@@ -74,17 +79,4 @@ public class ServerHelper {
     return new Location(getWorld(), origin.getBlockX() + x, origin.getBlockY() + y,
         origin.getBlockZ() + z, 0f, 0f);
   }
-
-  public void updateBlocks(Block block, BlockType blockType) {
-
-  }
-  public void updateBlock(Block block, BlockType blockType) {
-    // check to see if the block is different - otherwise leave it
-    // TODO latter or condition will blow up. Test this.
-    if (!block.getType().equals(blockType)) {
-      block.setType(blockType);
-      block.update();
-    }
-  }
-
 }

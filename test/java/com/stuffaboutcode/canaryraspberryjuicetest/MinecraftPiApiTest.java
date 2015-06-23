@@ -6,6 +6,8 @@ import com.stuffaboutcode.canaryraspberryjuice.Blocks;
 import com.stuffaboutcode.canaryraspberryjuicetest.support.FileHelper;
 import com.stuffaboutcode.canaryraspberryjuicetest.support.InWorldTestSupport;
 import java.util.Map;
+import java.util.stream.Collectors;
+import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Position;
@@ -206,5 +208,22 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
     // there's a 2x2x2 set of green wool blocks
     assertEquals(Sets.newHashSet(BlockType.LimeWool), blockTypeToBlocks.keySet());
     assertEquals(8, blockTypeToBlocks.get(BlockType.LimeWool).size());
+  }
+
+  @Test
+  public void test_world_getPlayerEntityIds() throws Exception {
+    if (getServerHelper().hasPlayers()) {
+
+      String expectedPlayerIdsStr = getServerHelper().getPlayers().stream()
+          .map(Player::getID)
+          .map(String::valueOf)
+          .collect(Collectors.joining("|"));
+
+      getCommandHandler().handleLine("world.getPlayerEntityIds()");
+
+      assertEquals(
+          Lists.newArrayList(expectedPlayerIdsStr),
+          getTestOut().sends);
+    }
   }
 }
