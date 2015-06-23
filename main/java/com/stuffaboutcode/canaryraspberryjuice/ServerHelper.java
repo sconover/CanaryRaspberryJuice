@@ -75,15 +75,14 @@ public class ServerHelper {
         origin.getBlockZ() + z, 0f, 0f);
   }
 
+  public void updateBlocks(Block block, BlockType blockType) {
+
+  }
   public void updateBlock(Block block, BlockType blockType) {
     // check to see if the block is different - otherwise leave it
     // TODO latter or condition will blow up. Test this.
     if (!block.getType().equals(blockType)) {
       block.setType(blockType);
-      //if (blockData > 0) {
-      //  // TODO: will need to handle more types of "data"
-      //  block.setPropertyValue(block.getPropertyForName("color"), EnumDyeColor.b(blockData));
-      //}
       block.update();
     }
   }

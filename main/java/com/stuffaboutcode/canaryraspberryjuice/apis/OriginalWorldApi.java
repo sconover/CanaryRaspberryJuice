@@ -1,8 +1,8 @@
 package com.stuffaboutcode.canaryraspberryjuice.apis;
 
+import com.stuffaboutcode.canaryraspberryjuice.CuboidReference;
 import com.stuffaboutcode.canaryraspberryjuice.MinecraftRemoteCall;
 import com.stuffaboutcode.canaryraspberryjuice.ServerHelper;
-import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.logger.Logman;
@@ -28,7 +28,7 @@ public class OriginalWorldApi {
   }
 
   @MinecraftRemoteCall("world.getBlockWithData")
-  public Pair<BlockType,Short> worldGetBlockWithData(int x, int y, int z) {
+  public Pair<BlockType, Short> worldGetBlockWithData(int x, int y, int z) {
     Location loc = serverHelper.parseRelativeBlockLocation(origin, x, y, z);
     return ImmutablePair.of(
         serverHelper.getWorld().getBlockAt(loc).getType(),
@@ -37,14 +37,38 @@ public class OriginalWorldApi {
 
   @MinecraftRemoteCall("world.setBlock")
   public void setBlock(int x, int y, int z, short blockTypeId) {
-    setBlock(x, y, z, blockTypeId, (short)0);
+    setBlock(x, y, z, blockTypeId, (short) 0);
   }
 
   @MinecraftRemoteCall("world.setBlock")
   public void setBlock(int x, int y, int z, short blockTypeId, short blockData) {
-    Location loc = serverHelper.parseRelativeBlockLocation(origin, x, y, z);
-    Block block = serverHelper.getWorld().getBlockAt(loc);
-    BlockType blockType = BlockType.fromIdAndData(blockTypeId, blockData);
-    serverHelper.updateBlock(block, blockType);
+    setBlocks(
+        x, y, z,
+        x, y, z,
+        blockTypeId,blockData);
+  }
+
+  @MinecraftRemoteCall("world.setBlocks")
+  public void setBlocks(
+      int x1, int y1, int z1,
+      int x2, int y2, int z2,
+      short blockTypeId) {
+    setBlocks(
+        x1, y1, z1,
+        x2, y2, z2,
+        blockTypeId, (short) 0);
+  }
+
+  @MinecraftRemoteCall("world.setBlocks")
+  public void setBlocks(
+      int x1, int y1, int z1,
+      int x2, int y2, int z2,
+      short blockTypeId, short blockData) {
+    Location loc1 = serverHelper.parseRelativeBlockLocation(origin, x1, y1, z1);
+    Location loc2 = serverHelper.parseRelativeBlockLocation(origin, x2, y2, z2);
+
+    CuboidReference.fromCorners(loc1, loc2)
+        .fetchBlocks(serverHelper.getWorld())
+        .changeBlocksToType(BlockType.fromIdAndData(blockTypeId, blockData));
   }
 }

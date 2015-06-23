@@ -1,4 +1,4 @@
-package com.stuffaboutcode.canaryraspberryjuicetest.support;
+package com.stuffaboutcode.canaryraspberryjuice;
 
 /**
  * A point in 3d space relative to "object".

@@ -1,6 +1,7 @@
 package com.stuffaboutcode.canaryraspberryjuicetest.support;
 
 import com.stuffaboutcode.canaryraspberryjuice.CommandHandler;
+import com.stuffaboutcode.canaryraspberryjuice.CuboidReference;
 import com.stuffaboutcode.canaryraspberryjuice.ServerHelper;
 import net.canarymod.Canary;
 import net.canarymod.api.world.blocks.Block;

@@ -1,24 +1,21 @@
-package com.stuffaboutcode.canaryraspberryjuicetest.support;
+package com.stuffaboutcode.canaryraspberryjuice;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
+import net.canarymod.api.world.position.Position;
 
 /**
  * A "materialized" cuboid of blocks from a minecraft world.
  *
  * Intended to make mass block operations easy to perform from tests.
- *
- * May eventually graduate, for use in production code (in which case it needs modifications
- * to make it Java 6 compatible).
  */
 public class Cuboid implements Iterable<Relative<Block>> {
   private final Block[][][] blocks;
@@ -28,7 +25,7 @@ public class Cuboid implements Iterable<Relative<Block>> {
   }
 
   public Set<BlockType> blockTypes() {
-    Set<BlockType> blockTypes = new LinkedHashSet<>();
+    Set<BlockType> blockTypes = new LinkedHashSet<BlockType>();
     for (Relative<Block> blockLocation : this) {
       blockTypes.add(blockLocation.object.getType());
     }
@@ -47,17 +44,11 @@ public class Cuboid implements Iterable<Relative<Block>> {
     return new RelativeBlockIterator(blocks);
   }
 
-  public Stream<Relative<Block>> stream() {
-    return StreamSupport.stream(
-        Spliterators.spliteratorUnknownSize(iterator(), Spliterator.ORDERED),
-        false);
-  }
-
   public Cuboid changeBlocksToType(BlockType newType) {
-    stream().forEach((relativeBlock) -> {
+    for (Relative<Block> relativeBlock: this) {
       relativeBlock.object.setType(newType);
       relativeBlock.object.update();
-    });
+    }
     return this;
   }
 
@@ -70,7 +61,15 @@ public class Cuboid implements Iterable<Relative<Block>> {
     return blocks[0][0][0];
   }
 
-  class RelativeBlockIterator implements Iterator<Relative<Block>> {
+  public List<Position> toPositions() {
+    List<Position> positions = new ArrayList<Position>();
+    for (Relative<Block> relativeBlock: this) {
+      positions.add(relativeBlock.object.getPosition());
+    }
+    return ImmutableList.copyOf(positions);
+  }
+
+  public static class RelativeBlockIterator implements Iterator<Relative<Block>> {
     private final Block[][][] blocks;
     private int x;
     private int y;

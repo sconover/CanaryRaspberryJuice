@@ -1,4 +1,4 @@
-package com.stuffaboutcode.canaryraspberryjuicetest.support;
+package com.stuffaboutcode.canaryraspberryjuice;
 
 import com.google.common.base.Preconditions;
 import net.canarymod.api.world.World;
@@ -11,6 +11,20 @@ import net.canarymod.api.world.position.Position;
  * Intentionally does not depend on any Minecraft server connection.
  */
 public class CuboidReference {
+
+  public static CuboidReference fromCorners(Position p1, Position p2) {
+    int minX = p1.getBlockX() < p2.getBlockX() ? p1.getBlockX() : p2.getBlockX();
+    int maxX = p1.getBlockX() >= p2.getBlockX() ? p1.getBlockX() : p2.getBlockX();
+    int minY = p1.getBlockY() < p2.getBlockY() ? p1.getBlockY() : p2.getBlockY();
+    int maxY = p1.getBlockY() >= p2.getBlockY() ? p1.getBlockY() : p2.getBlockY();
+    int minZ = p1.getBlockZ() < p2.getBlockZ() ? p1.getBlockZ() : p2.getBlockZ();
+    int maxZ = p1.getBlockZ() >= p2.getBlockZ() ? p1.getBlockZ() : p2.getBlockZ();
+
+    Position start = new Position(minX, minY, minZ);
+
+    return new CuboidReference(start, maxX-minX+1, maxY-minY+1, maxZ-minZ+1);
+  }
+
   private final Position start;
   private final int xSize;
   private final int ySize;

@@ -1,7 +1,7 @@
 package com.stuffaboutcode.canaryraspberryjuicetest;
 
 import com.google.common.base.Strings;
-import com.stuffaboutcode.canaryraspberryjuicetest.support.CuboidReference;
+import com.stuffaboutcode.canaryraspberryjuice.CuboidReference;
 import com.stuffaboutcode.canaryraspberryjuicetest.support.InWorldTestSupport;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Position;

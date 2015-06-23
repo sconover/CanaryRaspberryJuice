@@ -94,15 +94,7 @@ public class CommandHandler {
       // get the world
       World world = getWorld();
 
-      if (c.equals("world.setBlocks")) {
-        Location loc1 = parseRelativeBlockLocation(origin, args[0], args[1], args[2]);
-        Location loc2 = parseRelativeBlockLocation(origin, args[3], args[4], args[5]);
-        short blockType = Short.parseShort(args[6]);
-        short data = args.length > 7 ? Short.parseShort(args[7]) : (short) 0;
-        setCuboid(loc1, loc2, blockType, data);
-
-        // world.getPlayerIds
-      } else if (c.equals("world.getPlayerIds")) {
+      if (c.equals("world.getPlayerIds")) {
         StringBuilder bdr = new StringBuilder();
         for (Player p : server.getPlayerList()) {
           bdr.append(p.getID());
