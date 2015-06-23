@@ -3,6 +3,8 @@ package com.stuffaboutcode.canaryraspberryjuice.apis;
 import com.stuffaboutcode.canaryraspberryjuice.CuboidReference;
 import com.stuffaboutcode.canaryraspberryjuice.MinecraftRemoteCall;
 import com.stuffaboutcode.canaryraspberryjuice.ServerHelper;
+import java.util.List;
+import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.logger.Logman;
@@ -45,7 +47,7 @@ public class OriginalWorldApi {
     setBlocks(
         x, y, z,
         x, y, z,
-        blockTypeId,blockData);
+        blockTypeId, blockData);
   }
 
   @MinecraftRemoteCall("world.setBlocks")
@@ -70,5 +72,11 @@ public class OriginalWorldApi {
     CuboidReference.fromCorners(loc1, loc2)
         .fetchBlocks(serverHelper.getWorld())
         .changeBlocksToType(BlockType.fromIdAndData(blockTypeId, blockData));
+  }
+
+  @MinecraftRemoteCall("world.getPlayerEntityIds")
+  public Player[] getPlayerEntityIds() {
+    List<Player> allPlayers = serverHelper.getPlayers();
+    return allPlayers.toArray(new Player[allPlayers.size()]);
   }
 }

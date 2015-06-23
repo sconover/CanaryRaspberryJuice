@@ -2,6 +2,9 @@ package com.stuffaboutcode.canaryraspberryjuice;
 
 import com.google.common.base.Joiner;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.blocks.BlockType;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -57,6 +60,17 @@ public class ApiIO {
 
     } else if (objectResult instanceof String) {
       return (String)objectResult;
+
+    } else if (objectResult instanceof Player) {
+      return String.valueOf(((Player)objectResult).getID());
+
+    } else if (objectResult instanceof Player[]) {
+      Player[] players = (Player[])objectResult;
+      List<String> strings = new ArrayList<String>();
+      for (Player p: players) {
+        strings.add(serializeResult(p));
+      }
+      return Joiner.on("|").join(strings);
 
     }
     throw new RuntimeException(String.format(

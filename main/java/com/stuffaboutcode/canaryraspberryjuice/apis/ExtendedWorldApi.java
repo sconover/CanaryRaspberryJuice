@@ -2,6 +2,7 @@ package com.stuffaboutcode.canaryraspberryjuice.apis;
 
 import com.stuffaboutcode.canaryraspberryjuice.MinecraftRemoteCall;
 import com.stuffaboutcode.canaryraspberryjuice.ServerHelper;
+import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.logger.Logman;
@@ -30,5 +31,11 @@ public class ExtendedWorldApi {
         serverHelper.parseRelativeBlockLocation(origin, x2, y2, z2);
 
     return serverHelper.getBlocks(loc1, loc2).toBlockTypeArray();
+  }
+
+  @MinecraftRemoteCall("world.getPlayerEntityId")
+  public Player getPlayerEntityId(String playerName) {
+    // TODO: what should the error policy be, in the case this is null?
+    return serverHelper.getPlayerByName(playerName);
   }
 }

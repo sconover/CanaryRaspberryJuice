@@ -63,7 +63,8 @@ public class CommandHandler {
     //System.out.println(line);
     String methodName = line.substring(0, line.indexOf("("));
     //split string into args, handles , inside " i.e. ","
-    String[] args = line.substring(line.indexOf("(") + 1, line.length() - 1).split(",");
+    String str = line.substring(line.indexOf("(") + 1, line.length() - 1);
+    String[] args = str.equals("") ? new String[]{} : str.split(",");
     //System.out.println(methodName + ":" + Arrays.toString(args));
     handleCommand(methodName, args);
   }
@@ -94,27 +95,7 @@ public class CommandHandler {
       // get the world
       World world = getWorld();
 
-      if (c.equals("world.getPlayerEntityIds")) {
-        StringBuilder bdr = new StringBuilder();
-        for (Player p : server.getPlayerList()) {
-          bdr.append(p.getID());
-          bdr.append("|");
-        }
-        bdr.deleteCharAt(bdr.length() - 1);
-        send(bdr.toString());
-
-        // world.getPlayerId
-      } else if (c.equals("world.getPlayerEntityId")) {
-        Player p = getNamedPlayer(args[0]);
-        if (p != null) {
-          send(p.getID());
-        } else {
-          logman.info("Player [" + args[0] + "] not found.");
-          send("Fail");
-        }
-
-        // chat.post
-      } else if (c.equals("chat.post")) {
+      if (c.equals("chat.post")) {
         //create chat message from args as it was split by ,
         String chatMessage = "";
         int count;

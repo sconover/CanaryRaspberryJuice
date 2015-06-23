@@ -46,6 +46,10 @@ public class ServerHelper {
     return ImmutableList.copyOf(server.getPlayerList());
   }
 
+  public Player getPlayerByName(String playerName) {
+    return server.getPlayer(playerName);
+  }
+
   // get the host player, i.e. the first player on the server
   public boolean hasPlayers() {
     return !server.getPlayerList().isEmpty();
