@@ -56,4 +56,8 @@ public class ServerHelper {
     return new Location(getWorld(), origin.getBlockX() + x, origin.getBlockY() + y,
         origin.getBlockZ() + z, 0f, 0f);
   }
+
+  public void broadcastMessage(String message) {
+    server.broadcastMessage(message);
+  }
 }

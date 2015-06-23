@@ -1,7 +1,7 @@
 package com.stuffaboutcode.canaryraspberryjuice;
 
-import com.stuffaboutcode.canaryraspberryjuice.apis.ExtendedWorldApi;
-import com.stuffaboutcode.canaryraspberryjuice.apis.OriginalWorldApi;
+import com.stuffaboutcode.canaryraspberryjuice.apis.ExtendedApi;
+import com.stuffaboutcode.canaryraspberryjuice.apis.OriginalApi;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
@@ -33,8 +33,12 @@ public class CommandHandler {
   private final ArrayDeque<ChatHook> chatPostedQueue = new ArrayDeque<ChatHook>();
 
   private Player attachedPlayer;
-  private Map<Pair<String, Integer>, Pair<Object, Method>> apiMethodNameToApiObjectAndMethod =
+  private final Map<Pair<String, Integer>, Pair<Object, Method>>
+      apiMethodNameAndParameterCountToApiObjectAndMethod =
       new LinkedHashMap<Pair<String, Integer>, Pair<Object, Method>>();
+  private final Map<String, Pair<Object, Method>>
+      apiMethodNameAcceptingRawArgStringToApiObjectAndMethod =
+      new LinkedHashMap<String, Pair<Object, Method>>();
 
   public CommandHandler(Server server, ServerHelper serverHelper, Logman logman,
       RemoteSession.Out out) {
@@ -44,17 +48,25 @@ public class CommandHandler {
     this.out = out;
     this.origin = getSpawnLocation();
 
-    registerApiMethods(new OriginalWorldApi(origin, serverHelper, logman));
-    registerApiMethods(new ExtendedWorldApi(origin, serverHelper, logman));
+    registerApiMethods(new OriginalApi(origin, serverHelper, logman));
+    registerApiMethods(new ExtendedApi(origin, serverHelper, logman));
   }
 
   private void registerApiMethods(Object api) {
     for (Method m : api.getClass().getMethods()) {
       if (m.isAnnotationPresent(MinecraftRemoteCall.class)) {
         String apiMethodName = m.getDeclaredAnnotation(MinecraftRemoteCall.class).value();
-        apiMethodNameToApiObjectAndMethod.put(
-            ImmutablePair.of(apiMethodName, m.getParameterCount()),
-            ImmutablePair.of(api, m));
+
+        if (m.getParameterAnnotations().length == 1 &&
+            m.getParameterAnnotations()[0].getClass().equals(RawArgString.class)) {
+          apiMethodNameAcceptingRawArgStringToApiObjectAndMethod.put(
+              apiMethodName,
+              ImmutablePair.of(api, m));
+        } else {
+          apiMethodNameAndParameterCountToApiObjectAndMethod.put(
+              ImmutablePair.of(apiMethodName, m.getParameterCount()),
+              ImmutablePair.of(api, m));
+        }
       }
     }
   }
@@ -63,29 +75,44 @@ public class CommandHandler {
     //System.out.println(line);
     String methodName = line.substring(0, line.indexOf("("));
     //split string into args, handles , inside " i.e. ","
-    String str = line.substring(line.indexOf("(") + 1, line.length() - 1);
-    String[] args = str.equals("") ? new String[]{} : str.split(",");
+    String rawArgStr = line.substring(line.indexOf("(") + 1, line.length() - 1);
+    String[] args = rawArgStr.equals("") ? new String[]{} : rawArgStr.split(",");
     //System.out.println(methodName + ":" + Arrays.toString(args));
-    handleCommand(methodName, args);
+    handleCommand(methodName, args, rawArgStr);
   }
 
-  protected void handleCommand(String c, String[] args) {
+  protected void handleCommand(String c, String[] args, String rawArgStr) {
 
     try {
       Pair<String, Integer> key = ImmutablePair.of(c, args.length);
-      if (apiMethodNameToApiObjectAndMethod.containsKey(key)) {
-        Pair<Object, Method> apiObjectAndMethod = apiMethodNameToApiObjectAndMethod.get(key);
-        Object apiObject = apiObjectAndMethod.getLeft();
-        Method method = apiObjectAndMethod.getRight();
 
-        Object[] convertedArgs = ApiIO.convertArguments(args, method);
+      Object apiObject = null;
+      Method method = null;
+      Object[] convertedArgs = null;
 
+      if (apiMethodNameAcceptingRawArgStringToApiObjectAndMethod.containsKey(c)) {
+        Pair<Object, Method> apiObjectAndMethod =
+            apiMethodNameAcceptingRawArgStringToApiObjectAndMethod.get(c);
+        apiObject = apiObjectAndMethod.getLeft();
+        method = apiObjectAndMethod.getRight();
+
+        convertedArgs = new String[]{rawArgStr};
+
+      } else if (apiMethodNameAndParameterCountToApiObjectAndMethod.containsKey(key)) {
+        Pair<Object, Method> apiObjectAndMethod =
+            apiMethodNameAndParameterCountToApiObjectAndMethod.get(key);
+        apiObject = apiObjectAndMethod.getLeft();
+        method = apiObjectAndMethod.getRight();
+
+        convertedArgs = ApiIO.convertArguments(args, method);
+      }
+
+      if (method != null) {
         if (method.getReturnType().equals(Void.TYPE)) {
           method.invoke(apiObject, convertedArgs);
         } else {
           send(ApiIO.serializeResult(method.invoke(apiObject, convertedArgs)));
         }
-
         return;
       }
 
@@ -95,18 +122,7 @@ public class CommandHandler {
       // get the world
       World world = getWorld();
 
-      if (c.equals("chat.post")) {
-        //create chat message from args as it was split by ,
-        String chatMessage = "";
-        int count;
-        for (count = 0; count < args.length; count++) {
-          chatMessage = chatMessage + args[count] + ",";
-        }
-        chatMessage = chatMessage.substring(0, chatMessage.length() - 1);
-        server.broadcastMessage(chatMessage);
-
-        // events.clear
-      } else if (c.equals("events.clear")) {
+      if (c.equals("events.clear")) {
         blockHitQueue.clear();
         chatPostedQueue.clear();
 

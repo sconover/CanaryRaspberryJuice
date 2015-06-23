@@ -8,13 +8,13 @@ import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.logger.Logman;
 
-public class ExtendedWorldApi {
+public class ExtendedApi {
   // origin is the spawn location on the world
   private final Location origin;
   private final ServerHelper serverHelper;
   private final Logman logman;
 
-  public ExtendedWorldApi(Location origin, ServerHelper serverHelper, Logman logman) {
+  public ExtendedApi(Location origin, ServerHelper serverHelper, Logman logman) {
     this.origin = origin;
     this.serverHelper = serverHelper;
     this.logman = logman;
