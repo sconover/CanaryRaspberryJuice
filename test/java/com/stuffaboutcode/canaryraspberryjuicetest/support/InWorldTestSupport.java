@@ -12,7 +12,6 @@ import net.canarymod.api.world.position.Location;
 import net.canarymod.api.world.position.Position;
 import net.canarymod.logger.Logman;
 import org.junit.Before;
-import org.junit.BeforeClass;
 
 /**
  * Intended to be extended by test classes. Provides convenience objects and methods
@@ -20,7 +19,7 @@ import org.junit.BeforeClass;
  */
 public abstract class InWorldTestSupport {
   private ServerHelper serverHelper;
-  private static int xOffset;
+  private static int xOffset = 2;
   private TestOut testOut;
   private CommandHandler commandHandler;
 
@@ -34,11 +33,6 @@ public abstract class InWorldTestSupport {
 
   public CommandHandler getCommandHandler() {
     return commandHandler;
-  }
-
-  @BeforeClass
-  public static void setUpOnce() {
-    xOffset = 2;
   }
 
   @Before
@@ -61,7 +55,7 @@ public abstract class InWorldTestSupport {
     ref.fetchBlocks(serverHelper.getWorld()).makeEmpty();
 
     Block block = serverHelper.getWorld().getBlockAt(justBeforeTestPosition);
-    block.setType(BlockType.GoldBlock);
+    block.setType(BlockType.SeaLantern);
     block.update();
 
     Block blockAbove = block.getRelative(0, 1, 0);

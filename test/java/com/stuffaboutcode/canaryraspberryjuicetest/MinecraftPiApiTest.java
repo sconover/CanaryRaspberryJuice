@@ -71,7 +71,7 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
     block.update();
 
     Block block2 = block.getRelative(1, 0, 0);
-    block2.setType(BlockType.GreenWool);
+    block2.setType(BlockType.LimeWool);
     block2.update();
 
     getCommandHandler().handleLine(
@@ -94,8 +94,8 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
 
     assertEquals(
         String.format("%d,%d",
-            BlockType.GreenWool.getId(),
-            BlockType.GreenWool.getData()),
+            BlockType.LimeWool.getId(),
+            BlockType.LimeWool.getData()),
         getTestOut().sends.get(1));
   }
 
@@ -118,21 +118,21 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
             (int) p.getX() + 1,
             (int) p.getY(),
             (int) p.getZ(),
-            BlockType.GreenWool.getId(),
-            BlockType.GreenWool.getData()));
+            BlockType.LimeWool.getId(),
+            BlockType.LimeWool.getData()));
 
     Block block2 = getServerHelper().getWorld().getBlockAt(
         (int)p.getX() + 1,
         (int)p.getY(),
         (int)p.getZ());
 
-    assertEquals(BlockType.GreenWool, block2.getType());
-    assertEquals(BlockType.GreenWool.getData(), block2.getType().getData());
+    assertEquals(BlockType.LimeWool, block2.getType());
+    assertEquals(BlockType.LimeWool.getData(), block2.getType().getData());
   }
 
   @Test
-  public void test_world_setBlocks() throws Exception {
-    Position cubeCorner = nextTestPosition("world.setBlocks");
+  public void test_world_setBlocks_simple() throws Exception {
+    Position cubeCorner = nextTestPosition("world.setBlocks simple");
 
     Position otherCubeCorner =
         new Position(
@@ -176,23 +176,35 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
         blockTypeToBlocks2.keySet());
     assertEquals(8, blockTypeToBlocks2.get(BlockType.RedstoneBlock).size());
     assertEquals(27-8, blockTypeToBlocks2.get(BlockType.Air).size());
+  }
 
-    //assertEquals(BlockType.RedstoneBlock, block.getType());
-    //
-    //getCommandHandler().handleLine(
-    //    String.format("world.setBlock(%d,%d,%d,%d,%d)",
-    //        (int) cubeCorner.getX() + 1,
-    //        (int) cubeCorner.getY(),
-    //        (int) cubeCorner.getZ(),
-    //        BlockType.GreenWool.getId(),
-    //        BlockType.GreenWool.getData()));
-    //
-    //Block block2 = getServerHelper().getWorld().getBlockAt(
-    //    (int)cubeCorner.getX() + 1,
-    //    (int)cubeCorner.getY(),
-    //    (int)cubeCorner.getZ());
-    //
-    //assertEquals(BlockType.GreenWool, block2.getType());
-    //assertEquals(BlockType.GreenWool.getData(), block2.getType().getData());
+  @Test
+  public void test_world_setBlocks_withData_whichIsTheColor() throws Exception {
+    Position cubeCorner = nextTestPosition("world.setBlocks with data");
+
+    Position otherCubeCorner =
+        new Position(
+            cubeCorner.getX() + 1,
+            cubeCorner.getY() + 1,
+            cubeCorner.getZ() + 1);
+
+    getCommandHandler().handleLine(
+        String.format("world.setBlocks(%d,%d,%d,%d,%d,%d,%d,%d)",
+            (int) cubeCorner.getX(),
+            (int) cubeCorner.getY(),
+            (int) cubeCorner.getZ(),
+            (int) otherCubeCorner.getX(),
+            (int) otherCubeCorner.getY(),
+            (int) otherCubeCorner.getZ(),
+            BlockType.LimeWool.getId(),
+            BlockType.LimeWool.getData()));
+
+    Map<BlockType, Blocks> blockTypeToBlocks =
+        getServerHelper().getBlocks(
+        cubeCorner, otherCubeCorner).toBlockTypeToBlocks();
+
+    // there's a 2x2x2 set of green wool blocks
+    assertEquals(Sets.newHashSet(BlockType.LimeWool), blockTypeToBlocks.keySet());
+    assertEquals(8, blockTypeToBlocks.get(BlockType.LimeWool).size());
   }
 }
