@@ -12,6 +12,22 @@ import net.canarymod.api.world.position.Position;
  */
 public class CuboidReference {
 
+  public static CuboidReference relativeTo(Position origin, Position p1) {
+    return relativeTo(origin, p1, p1);
+  }
+
+  public static CuboidReference relativeTo(Position origin, Position p1, Position p2) {
+    Position relativeP1 = new Position(
+        origin.getBlockX() + p1.getBlockX(),
+        origin.getBlockY() + p1.getBlockY(),
+        origin.getBlockZ() + p1.getBlockZ());
+    Position relativeP2 = new Position(
+        origin.getBlockX() + p2.getBlockX(),
+        origin.getBlockY() + p2.getBlockY(),
+        origin.getBlockZ() + p2.getBlockZ());
+    return fromCorners(relativeP1, relativeP2);
+  }
+
   public static CuboidReference fromCorners(Position p1, Position p2) {
     int minX = p1.getBlockX() < p2.getBlockX() ? p1.getBlockX() : p2.getBlockX();
     int maxX = p1.getBlockX() >= p2.getBlockX() ? p1.getBlockX() : p2.getBlockX();

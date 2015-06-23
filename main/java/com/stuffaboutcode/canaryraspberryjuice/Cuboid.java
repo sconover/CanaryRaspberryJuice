@@ -18,7 +18,7 @@ import net.canarymod.api.world.position.Position;
 /**
  * A "materialized" cuboid of blocks from a minecraft world.
  *
- * Intended to make mass block operations easy to perform from tests.
+ * Intended to make mass block operations easy to perform.
  */
 public class Cuboid implements Iterable<Relative<Block>> {
   private final Block[][][] blocks;

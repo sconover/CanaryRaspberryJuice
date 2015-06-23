@@ -54,8 +54,8 @@ public class CommandHandler {
 
   private void registerApiMethods(Object api) {
     for (Method m : api.getClass().getMethods()) {
-      if (m.isAnnotationPresent(MinecraftRemoteCall.class)) {
-        String apiMethodName = m.getDeclaredAnnotation(MinecraftRemoteCall.class).value();
+      if (m.isAnnotationPresent(RPC.class)) {
+        String apiMethodName = m.getDeclaredAnnotation(RPC.class).value();
 
         if (m.getParameterAnnotations().length == 1 &&
             m.getParameterAnnotations()[0].getClass().equals(RawArgString.class)) {

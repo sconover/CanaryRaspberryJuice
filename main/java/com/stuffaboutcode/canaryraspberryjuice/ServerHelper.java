@@ -6,7 +6,6 @@ import java.util.List;
 import net.canarymod.api.Server;
 import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.World;
-import net.canarymod.api.world.position.Location;
 
 /**
  * Wrapper around a canary server. Provides convenience methods for accessing objects and
@@ -50,11 +49,6 @@ public class ServerHelper {
   // get the host player, i.e. the first player on the server
   public boolean hasPlayers() {
     return !server.getPlayerList().isEmpty();
-  }
-
-  public Location parseRelativeBlockLocation(Location origin, int x, int y, int z) {
-    return new Location(getWorld(), origin.getBlockX() + x, origin.getBlockY() + y,
-        origin.getBlockZ() + z, 0f, 0f);
   }
 
   public void broadcastMessage(String message) {
