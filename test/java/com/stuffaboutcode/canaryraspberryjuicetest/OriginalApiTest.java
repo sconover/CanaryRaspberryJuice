@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests all api methods expected to be available on the Minecraft Pi edition.
  */
-public class MinecraftPiApiTest extends InWorldTestSupport {
+public class OriginalApiTest extends InWorldTestSupport {
 
   /**
    * TODO:
@@ -50,7 +50,7 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
   public void test_world_getBlock() throws Exception {
     Position p = nextTestPosition("world.getBlock");
 
-    Block block = getServerHelper().getWorld().getBlockAt(p);
+    Block block = getServerWrapper().getWorld().getBlockAt(p);
     block.setType(BlockType.RedstoneBlock);
     block.update();
 
@@ -69,7 +69,7 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
   public void test_world_getBlockWithData() throws Exception {
     Position p = nextTestPosition("world.getBlockWithData");
 
-    Block block = getServerHelper().getWorld().getBlockAt(p);
+    Block block = getServerWrapper().getWorld().getBlockAt(p);
     block.setType(BlockType.RedstoneBlock);
     block.update();
 
@@ -113,7 +113,7 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
             (int) p.getZ(),
             BlockType.RedstoneBlock.getId()));
 
-    Block block = getServerHelper().getWorld().getBlockAt(p);
+    Block block = getServerWrapper().getWorld().getBlockAt(p);
     assertEquals(BlockType.RedstoneBlock, block.getType());
 
     getCommandHandler().handleLine(
@@ -124,7 +124,7 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
             BlockType.LimeWool.getId(),
             BlockType.LimeWool.getData()));
 
-    Block block2 = getServerHelper().getWorld().getBlockAt(
+    Block block2 = getServerWrapper().getWorld().getBlockAt(
         (int)p.getX() + 1,
         (int)p.getY(),
         (int)p.getZ());
@@ -155,7 +155,7 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
 
     Map<BlockType, List<Block>> blockTypeToBlocks =
       CuboidReference.fromCorners(cubeCorner, otherCubeCorner)
-          .fetchBlocks(getServerHelper().getWorld())
+          .fetchBlocks(getServerWrapper().getWorld())
           .blockTypeToBlocks();
 
     // there's a 2x2x2 set of redstone blocks
@@ -170,7 +170,7 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
 
     Map<BlockType, List<Block>> blockTypeToBlocks2 =
         CuboidReference.fromCorners(cubeCorner, pastOtherCubeCorner)
-            .fetchBlocks(getServerHelper().getWorld())
+            .fetchBlocks(getServerWrapper().getWorld())
             .blockTypeToBlocks();
 
     // out of this 3x3x3 cube, there's a 2x2x2 set of redstone blocks,
@@ -206,7 +206,7 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
 
     Map<BlockType, List<Block>> blockTypeToBlocks =
         CuboidReference.fromCorners(cubeCorner, otherCubeCorner)
-            .fetchBlocks(getServerHelper().getWorld())
+            .fetchBlocks(getServerWrapper().getWorld())
             .blockTypeToBlocks();
 
     // there's a 2x2x2 set of green wool blocks
@@ -216,9 +216,9 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
 
   @Test
   public void test_world_getPlayerEntityIds() throws Exception {
-    if (getServerHelper().hasPlayers()) {
+    if (getServerWrapper().hasPlayers()) {
 
-      String expectedPlayerIdsStr = getServerHelper().getPlayers().stream()
+      String expectedPlayerIdsStr = getServerWrapper().getPlayers().stream()
           .map(Player::getID)
           .map(String::valueOf)
           .collect(Collectors.joining("|"));

@@ -12,11 +12,11 @@ import net.canarymod.api.world.World;
  * information about the world. Tests and other code should not use a Canary Server object
  * directly.
  */
-public class ServerHelper {
+public class ServerWrapper {
   private final Server server;
   private final World firstWorld;
 
-  public ServerHelper(Server server) {
+  public ServerWrapper(Server server) {
     this.server = server;
 
     Preconditions.checkState(

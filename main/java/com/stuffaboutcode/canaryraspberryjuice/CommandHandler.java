@@ -24,7 +24,7 @@ public class CommandHandler {
   // origin is the spawn location on the world
   private final Location origin;
   private final Server server;
-  private final ServerHelper serverHelper;
+  private final ServerWrapper serverWrapper;
   private final Logman logman;
   private final RemoteSession.Out out;
 
@@ -40,16 +40,16 @@ public class CommandHandler {
       apiMethodNameAcceptingRawArgStringToApiObjectAndMethod =
       new LinkedHashMap<String, Pair<Object, Method>>();
 
-  public CommandHandler(Server server, ServerHelper serverHelper, Logman logman,
+  public CommandHandler(Server server, ServerWrapper serverWrapper, Logman logman,
       RemoteSession.Out out) {
     this.server = server;
-    this.serverHelper = serverHelper;
+    this.serverWrapper = serverWrapper;
     this.logman = logman;
     this.out = out;
     this.origin = getSpawnLocation();
 
-    registerApiMethods(new OriginalApi(origin, serverHelper, logman));
-    registerApiMethods(new ExtendedApi(origin, serverHelper, logman));
+    registerApiMethods(new OriginalApi(origin, serverWrapper, logman));
+    registerApiMethods(new ExtendedApi(origin, serverWrapper, logman));
   }
 
   private void registerApiMethods(Object api) {

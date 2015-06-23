@@ -44,7 +44,7 @@ public class RemoteSession {
 	public RemoteSession(Server server, Logman logman, Socket socket) throws IOException {
 		this.logman = logman;
 		this.toOutQueue = new ToOutQueue(outQueue);
-		this.commandHandler = new CommandHandler(server, new ServerHelper(server), logman, toOutQueue);
+		this.commandHandler = new CommandHandler(server, new ServerWrapper(server), logman, toOutQueue);
 		this.socket = socket;
 		init();
 	}

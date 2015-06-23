@@ -3,7 +3,7 @@ package com.stuffaboutcode.canaryraspberryjuice.apis;
 import com.stuffaboutcode.canaryraspberryjuice.CuboidReference;
 import com.stuffaboutcode.canaryraspberryjuice.RPC;
 import com.stuffaboutcode.canaryraspberryjuice.RawArgString;
-import com.stuffaboutcode.canaryraspberryjuice.ServerHelper;
+import com.stuffaboutcode.canaryraspberryjuice.ServerWrapper;
 import java.util.List;
 import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.blocks.BlockType;
@@ -16,19 +16,19 @@ import org.apache.commons.lang3.tuple.Pair;
 public class OriginalApi {
   // origin is the spawn location on the world
   private final Location origin;
-  private final ServerHelper serverHelper;
+  private final ServerWrapper serverWrapper;
   private final Logman logman;
 
-  public OriginalApi(Location origin, ServerHelper serverHelper, Logman logman) {
+  public OriginalApi(Location origin, ServerWrapper serverWrapper, Logman logman) {
     this.origin = origin;
-    this.serverHelper = serverHelper;
+    this.serverWrapper = serverWrapper;
     this.logman = logman;
   }
 
   @RPC("world.getBlock")
   public BlockType worldGetBlock(int x, int y, int z) {
     return CuboidReference.relativeTo(origin, new Position(x, y, z))
-        .fetchBlocks(serverHelper.getWorld())
+        .fetchBlocks(serverWrapper.getWorld())
         .firstBlock()
         .getType();
   }
@@ -71,18 +71,18 @@ public class OriginalApi {
     CuboidReference.relativeTo(origin,
         new Position(x1, y1, z1),
         new Position(x2, y2, z2))
-        .fetchBlocks(serverHelper.getWorld())
+        .fetchBlocks(serverWrapper.getWorld())
         .changeBlocksToType(BlockType.fromIdAndData(blockTypeId, blockData));
   }
 
   @RPC("world.getPlayerEntityIds")
   public Player[] getPlayerEntityIds() {
-    List<Player> allPlayers = serverHelper.getPlayers();
+    List<Player> allPlayers = serverWrapper.getPlayers();
     return allPlayers.toArray(new Player[allPlayers.size()]);
   }
 
   @RPC("chat.post")
   public void chatPost(@RawArgString String chatStr) {
-    serverHelper.broadcastMessage(chatStr);
+    serverWrapper.broadcastMessage(chatStr);
   }
 }

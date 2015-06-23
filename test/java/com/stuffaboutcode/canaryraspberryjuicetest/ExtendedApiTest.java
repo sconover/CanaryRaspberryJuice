@@ -23,7 +23,7 @@ public class ExtendedApiTest  extends InWorldTestSupport {
     int pz = (int)p.getZ();
 
     new CuboidReference(p, 3, 3, 3)
-        .fetchBlocks(getServerHelper().getWorld())
+        .fetchBlocks(getServerWrapper().getWorld())
         .changeBlocksToType(BlockType.RedstoneBlock);
 
     String redstoneBlockIdStr = String.valueOf(BlockType.RedstoneBlock.getId());
@@ -70,8 +70,8 @@ public class ExtendedApiTest  extends InWorldTestSupport {
 
   @Test
   public void test_world_getPlayerEntityId() throws Exception {
-    if (getServerHelper().hasPlayers()) {
-      Player firstPlayer = getServerHelper().getFirstPlayer();
+    if (getServerWrapper().hasPlayers()) {
+      Player firstPlayer = getServerWrapper().getFirstPlayer();
 
       getCommandHandler().handleLine(
           String.format("world.getPlayerEntityId(%s)", firstPlayer.getName()));

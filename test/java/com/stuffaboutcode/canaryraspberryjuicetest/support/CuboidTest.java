@@ -20,12 +20,12 @@ public class CuboidTest extends InWorldTestSupport {
   public void testChangeType() {
     Position p = nextTestPosition("testChangeType");
     Cuboid cuboid = new CuboidReference(p, 10, 10, 10)
-        .fetchBlocks(getServerHelper().getWorld());
+        .fetchBlocks(getServerWrapper().getWorld());
 
     cuboid.makeEmpty();
-    assertEquals(BlockType.Air, getServerHelper().getWorld().getBlockAt(p).getType());
+    assertEquals(BlockType.Air, getServerWrapper().getWorld().getBlockAt(p).getType());
     cuboid.changeBlocksToType(BlockType.GoldBlock);
-    assertEquals(BlockType.GoldBlock, getServerHelper().getWorld().getBlockAt(p).getType());
+    assertEquals(BlockType.GoldBlock, getServerWrapper().getWorld().getBlockAt(p).getType());
   }
 
   @Test
@@ -33,14 +33,14 @@ public class CuboidTest extends InWorldTestSupport {
     Position topOfWorld = new Position(1, 250, 1);
 
     CuboidReference topRef = new CuboidReference(topOfWorld, 1, 1, 1);
-    Cuboid cuboid = topRef.fetchBlocks(getServerHelper().getWorld());
+    Cuboid cuboid = topRef.fetchBlocks(getServerWrapper().getWorld());
     List<Relative<Block>> blockLocations = Lists.newArrayList(cuboid);
     assertEquals(1, blockLocations.size());
     assertEquals(new Position(1, 250, 1), blockLocations.get(0).object.getPosition());
     assertEquals(BlockType.Air, blockLocations.get(0).object.getType());
 
     CuboidReference topLargerRef = new CuboidReference(topOfWorld, 2, 3, 2);
-    cuboid = topLargerRef.fetchBlocks(getServerHelper().getWorld());
+    cuboid = topLargerRef.fetchBlocks(getServerWrapper().getWorld());
     blockLocations = Lists.newArrayList(cuboid);
     assertEquals(12, blockLocations.size());
     assertEquals(new Position(1, 250, 1), blockLocations.get(0).object.getPosition());
@@ -59,7 +59,7 @@ public class CuboidTest extends InWorldTestSupport {
     assertTrue(cuboid.isAir());
 
     Position bottomOfWorld = new Position(0, 0, 0);
-    cuboid = new CuboidReference(bottomOfWorld, 2, 4, 2).fetchBlocks(getServerHelper().getWorld());
+    cuboid = new CuboidReference(bottomOfWorld, 2, 4, 2).fetchBlocks(getServerWrapper().getWorld());
     blockLocations = Lists.newArrayList(cuboid);
     assertEquals(16, blockLocations.size());
 
@@ -78,14 +78,14 @@ public class CuboidTest extends InWorldTestSupport {
             new Position(2, 251, 2)),
         new CuboidReference(topOfWorld, 2, 3, 2)
             .center()
-            .fetchBlocks(getServerHelper().getWorld())
+            .fetchBlocks(getServerWrapper().getWorld())
             .toPositions());
 
     assertEquals(
         Arrays.asList(new Position(1, 250, 1)),
         new CuboidReference(topOfWorld, 1, 1, 1)
             .center()
-            .fetchBlocks(getServerHelper().getWorld())
+            .fetchBlocks(getServerWrapper().getWorld())
             .toPositions());
   }
 }

@@ -2,7 +2,7 @@ package com.stuffaboutcode.canaryraspberryjuicetest.support;
 
 import com.stuffaboutcode.canaryraspberryjuice.CommandHandler;
 import com.stuffaboutcode.canaryraspberryjuice.CuboidReference;
-import com.stuffaboutcode.canaryraspberryjuice.ServerHelper;
+import com.stuffaboutcode.canaryraspberryjuice.ServerWrapper;
 import net.canarymod.Canary;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
@@ -19,13 +19,13 @@ import org.junit.Before;
  * for use in in-world testing.
  */
 public abstract class InWorldTestSupport {
-  private ServerHelper serverHelper;
+  private ServerWrapper serverWrapper;
   private static int xOffset = 2;
   private TestOut testOut;
   private CommandHandler commandHandler;
 
-  public ServerHelper getServerHelper() {
-    return serverHelper;
+  public ServerWrapper getServerWrapper() {
+    return serverWrapper;
   }
 
   public TestOut getTestOut() {
@@ -38,13 +38,13 @@ public abstract class InWorldTestSupport {
 
   @Before
   public void setUp() throws Exception {
-    serverHelper = new ServerHelper(Canary.getServer());
-    serverHelper.getWorld().setSpawnLocation(new Location(serverHelper.getWorld(), new Position(0,0,0)));
+    serverWrapper = new ServerWrapper(Canary.getServer());
+    serverWrapper.getWorld().setSpawnLocation(new Location(serverWrapper.getWorld(), new Position(0,0,0)));
 
     testOut = new TestOut();
     commandHandler = new CommandHandler(
         Canary.getServer(),
-        new ServerHelper(Canary.getServer()),
+        new ServerWrapper(Canary.getServer()),
         Logman.getLogman("Test-logman"),
         testOut);
   }
@@ -53,9 +53,9 @@ public abstract class InWorldTestSupport {
     Position testPosition = new Position(xOffset, 100, 2);
     Position justBeforeTestPosition = new Position(xOffset-1, 99, 1);
     CuboidReference ref = new CuboidReference(justBeforeTestPosition, 31, 51, 31);
-    ref.fetchBlocks(serverHelper.getWorld()).makeEmpty();
+    ref.fetchBlocks(serverWrapper.getWorld()).makeEmpty();
 
-    Block block = serverHelper.getWorld().getBlockAt(justBeforeTestPosition);
+    Block block = serverWrapper.getWorld().getBlockAt(justBeforeTestPosition);
     block.setType(BlockType.SeaLantern);
     block.update();
 
@@ -70,8 +70,8 @@ public abstract class InWorldTestSupport {
     //sign.setTextOnLine("zzz", 2);
     //sign.setTextOnLine("yyy", 3);
 
-    if (serverHelper.hasPlayers()) {
-      serverHelper.getFirstPlayer().teleportTo(
+    if (serverWrapper.hasPlayers()) {
+      serverWrapper.getFirstPlayer().teleportTo(
           LocationHelper.getLocationFacingPosition(testPosition, 0, 10, -30));
     }
     //try {
