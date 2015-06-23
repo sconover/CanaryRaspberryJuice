@@ -2,11 +2,14 @@ package com.stuffaboutcode.canaryraspberryjuice;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
@@ -30,6 +33,25 @@ public class Cuboid implements Iterable<Relative<Block>> {
       blockTypes.add(blockLocation.object.getType());
     }
     return blockTypes;
+  }
+
+  public BlockType[] blockTypeForEachBlock() {
+    List<BlockType> blockTypes = new ArrayList<BlockType>();
+    for (Relative<Block> blockLocation : this) {
+      blockTypes.add(blockLocation.object.getType());
+    }
+    return blockTypes.toArray(new BlockType[blockTypes.size()]);
+  }
+
+  public Map<BlockType, List<Block>> blockTypeToBlocks() {
+    Map<BlockType, List<Block>> blockTypeToBlockList = new LinkedHashMap<BlockType, List<Block>>();
+    for (Relative<Block> blockLocation : this) {
+      if (!blockTypeToBlockList.containsKey(blockLocation.object.getType())) {
+        blockTypeToBlockList.put(blockLocation.object.getType(), new ArrayList<Block>());
+      }
+      blockTypeToBlockList.get(blockLocation.object.getType()).add(blockLocation.object);
+    }
+    return ImmutableMap.copyOf(blockTypeToBlockList);
   }
 
   public boolean isUniformType(BlockType blockType) {

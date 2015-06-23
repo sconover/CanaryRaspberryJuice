@@ -1,5 +1,6 @@
 package com.stuffaboutcode.canaryraspberryjuice.apis;
 
+import com.stuffaboutcode.canaryraspberryjuice.CuboidReference;
 import com.stuffaboutcode.canaryraspberryjuice.MinecraftRemoteCall;
 import com.stuffaboutcode.canaryraspberryjuice.ServerHelper;
 import net.canarymod.api.entity.living.humanoid.Player;
@@ -30,7 +31,9 @@ public class ExtendedWorldApi {
     Location loc2 =
         serverHelper.parseRelativeBlockLocation(origin, x2, y2, z2);
 
-    return serverHelper.getBlocks(loc1, loc2).toBlockTypeArray();
+    return CuboidReference.fromCorners(loc1, loc2)
+        .fetchBlocks(serverHelper.getWorld())
+        .blockTypeForEachBlock();
   }
 
   @MinecraftRemoteCall("world.getPlayerEntityId")

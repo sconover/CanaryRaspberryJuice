@@ -2,9 +2,10 @@ package com.stuffaboutcode.canaryraspberryjuicetest;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.stuffaboutcode.canaryraspberryjuice.Blocks;
+import com.stuffaboutcode.canaryraspberryjuice.CuboidReference;
 import com.stuffaboutcode.canaryraspberryjuicetest.support.FileHelper;
 import com.stuffaboutcode.canaryraspberryjuicetest.support.InWorldTestSupport;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import net.canarymod.api.entity.living.humanoid.Player;
@@ -152,9 +153,10 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
             (int) otherCubeCorner.getZ(),
             BlockType.RedstoneBlock.getId()));
 
-    Map<BlockType, Blocks> blockTypeToBlocks =
-        getServerHelper().getBlocks(
-        cubeCorner, otherCubeCorner).toBlockTypeToBlocks();
+    Map<BlockType, List<Block>> blockTypeToBlocks =
+      CuboidReference.fromCorners(cubeCorner, otherCubeCorner)
+          .fetchBlocks(getServerHelper().getWorld())
+          .blockTypeToBlocks();
 
     // there's a 2x2x2 set of redstone blocks
     assertEquals(Sets.newHashSet(BlockType.RedstoneBlock), blockTypeToBlocks.keySet());
@@ -166,9 +168,10 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
             cubeCorner.getY() + 2,
             cubeCorner.getZ() + 2);
 
-    Map<BlockType, Blocks> blockTypeToBlocks2 =
-        getServerHelper().getBlocks(
-            cubeCorner, pastOtherCubeCorner).toBlockTypeToBlocks();
+    Map<BlockType, List<Block>> blockTypeToBlocks2 =
+        CuboidReference.fromCorners(cubeCorner, pastOtherCubeCorner)
+            .fetchBlocks(getServerHelper().getWorld())
+            .blockTypeToBlocks();
 
     // out of this 3x3x3 cube, there's a 2x2x2 set of redstone blocks,
     // and the rest is air
@@ -201,9 +204,10 @@ public class MinecraftPiApiTest extends InWorldTestSupport {
             BlockType.LimeWool.getId(),
             BlockType.LimeWool.getData()));
 
-    Map<BlockType, Blocks> blockTypeToBlocks =
-        getServerHelper().getBlocks(
-        cubeCorner, otherCubeCorner).toBlockTypeToBlocks();
+    Map<BlockType, List<Block>> blockTypeToBlocks =
+        CuboidReference.fromCorners(cubeCorner, otherCubeCorner)
+            .fetchBlocks(getServerHelper().getWorld())
+            .blockTypeToBlocks();
 
     // there's a 2x2x2 set of green wool blocks
     assertEquals(Sets.newHashSet(BlockType.LimeWool), blockTypeToBlocks.keySet());

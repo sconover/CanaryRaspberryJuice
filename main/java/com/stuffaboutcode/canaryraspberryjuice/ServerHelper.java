@@ -2,14 +2,11 @@ package com.stuffaboutcode.canaryraspberryjuice;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
 import java.util.List;
 import net.canarymod.api.Server;
 import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.World;
-import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.position.Location;
-import net.canarymod.api.world.position.Position;
 
 /**
  * Wrapper around a canary server. Provides convenience methods for accessing objects and
@@ -53,30 +50,6 @@ public class ServerHelper {
   // get the host player, i.e. the first player on the server
   public boolean hasPlayers() {
     return !server.getPlayerList().isEmpty();
-  }
-
-  // TODO: kill
-  // get a cuboid of lots of blocks
-  public Blocks getBlocks(Position loc1, Position loc2) {
-    List<Block> blockList = new ArrayList<Block>();
-
-    int minX, maxX, minY, maxY, minZ, maxZ;
-    minX = loc1.getBlockX() < loc2.getBlockX() ? loc1.getBlockX() : loc2.getBlockX();
-    maxX = loc1.getBlockX() >= loc2.getBlockX() ? loc1.getBlockX() : loc2.getBlockX();
-    minY = loc1.getBlockY() < loc2.getBlockY() ? loc1.getBlockY() : loc2.getBlockY();
-    maxY = loc1.getBlockY() >= loc2.getBlockY() ? loc1.getBlockY() : loc2.getBlockY();
-    minZ = loc1.getBlockZ() < loc2.getBlockZ() ? loc1.getBlockZ() : loc2.getBlockZ();
-    maxZ = loc1.getBlockZ() >= loc2.getBlockZ() ? loc1.getBlockZ() : loc2.getBlockZ();
-
-    for (int y = minY; y <= maxY; ++y) {
-      for (int x = minX; x <= maxX; ++x) {
-        for (int z = minZ; z <= maxZ; ++z) {
-          blockList.add(getWorld().getBlockAt(x, y, z));
-        }
-      }
-    }
-
-    return new Blocks(blockList);
   }
 
   public Location parseRelativeBlockLocation(Location origin, int x, int y, int z) {
