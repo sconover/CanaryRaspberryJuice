@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import net.canarymod.api.entity.living.humanoid.Player;
+import net.canarymod.api.inventory.ItemType;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Position;
@@ -228,6 +229,36 @@ public class OriginalApiTest extends InWorldTestSupport {
       assertEquals(
           Lists.newArrayList(expectedPlayerIdsStr),
           getTestOut().sends);
+    }
+  }
+
+
+  //[09:14] <svdragster> Are you trying to force a player to select a certain slot, or are you trying to put an item in the players hand?
+  //    [09:25] <Guest32326> put an item in a player's hand
+  //    [09:55] <svdragster> then do and do inventory.setSlot(getSelectedHotbarSlotId(), item)
+  //    [09:55] <svdragster> Guest32326
+  //[09:56] <svdragster> you might have to set the item to '(Item) null' first
+
+  @Test
+  public void test_events_block_hits() throws Exception {
+    if (getServerWrapper().hasPlayers()) { // TODO maybe this is lame. assert existenace of logged-in player?
+      getServerWrapper().getFirstPlayer().getInventory()
+          .setSlot(ItemType.GoldSword.getId(), 1, 0);
+
+      getServerWrapper().getFirstPlayer().getInventory().setSlot(
+          getServerWrapper().getFirstPlayer().getInventory().getSelectedHotbarSlotId(),
+          getServerWrapper().getFirstPlayer().getInventory().getSlot(0));
+
+      //String expectedPlayerIdsStr = getServerWrapper().getPlayers().stream()
+      //    .map(Player::getID)
+      //    .map(String::valueOf)
+      //    .collect(Collectors.joining("|"));
+      //
+      //getCommandHandler().handleLine("world.getPlayerEntityIds()");
+      //
+      //assertEquals(
+      //    Lists.newArrayList(expectedPlayerIdsStr),
+      //    getTestOut().sends);
     }
   }
 }
