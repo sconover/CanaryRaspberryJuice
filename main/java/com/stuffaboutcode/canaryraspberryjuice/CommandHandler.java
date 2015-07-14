@@ -46,7 +46,7 @@ public class CommandHandler {
     this.out = out;
     this.origin = getSpawnLocation();
 
-    registerApiMethods(new OriginalApi(origin, serverWrapper, logman));
+    registerApiMethods(new OriginalApi(origin, serverWrapper, blockHitQueue, logman));
     registerApiMethods(new ExtendedApi(origin, serverWrapper, logman));
   }
 
@@ -120,32 +120,7 @@ public class CommandHandler {
       // get the world
       World world = getWorld();
 
-      if (c.equals("events.clear")) {
-        blockHitQueue.clear();
-
-        // events.block.hits
-      } else if (c.equals("events.block.hits")) {
-        // this doesn't work with multiplayer! need to think about how this should work
-        StringBuilder b = new StringBuilder();
-        BlockRightClickHook event;
-        while ((event = blockHitQueue.poll()) != null) {
-          Block block = event.getBlockClicked();
-          Location loc = block.getLocation();
-          b.append(blockLocationToRelative(loc));
-          b.append(",");
-          b.append(RemoteSession.blockFaceToNotch(block.getFaceClicked()));
-          b.append(",");
-          b.append(event.getPlayer().getID());
-          if (blockHitQueue.size() > 0) {
-            b.append("|");
-          }
-        }
-        //DEBUG
-        //logman.info(b.toString());
-        send(b.toString());
-
-        // player.getTile
-      } else if (c.equals("player.getTile")) {
+      if (c.equals("player.getTile")) {
         String name = null;
         if (args.length > 0) {
           name = args[0];

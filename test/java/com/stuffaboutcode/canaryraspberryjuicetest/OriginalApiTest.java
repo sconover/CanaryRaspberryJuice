@@ -259,18 +259,21 @@ public class OriginalApiTest extends InWorldTestSupport {
       Block b = getServerWrapper().getWorld().getBlockAt(p);
 
       getPluginListener().onBlockHit(new BlockRightClickHook(getServerWrapper().getFirstPlayer(), b));
+      getPluginListener().onBlockHit(new BlockRightClickHook(getServerWrapper().getFirstPlayer(), b));
 
       getCommandHandler().handleLine("events.block.hits()");
 
       int expectedFace = 7;
 
+      String expectedEventOutput = String.format("%d,%d,%d,%d,%d",
+          (int) p.getX(),
+          (int) p.getY(),
+          (int) p.getZ(),
+          expectedFace,
+          getServerWrapper().getFirstPlayer().getID());
+
       assertEquals(
-          Lists.newArrayList(String.format("%d,%d,%d,%d,%d",
-              (int)p.getX(),
-              (int)p.getY(),
-              (int)p.getZ(),
-              expectedFace,
-              getServerWrapper().getFirstPlayer().getID())),
+          Lists.newArrayList(expectedEventOutput + "|" + expectedEventOutput),
           getTestOut().sends);
     }
   }
