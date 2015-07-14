@@ -132,6 +132,19 @@ public class OriginalApi {
     return positionRelativeTo(player.getLocation(), origin);
   }
 
+  @RPC("player.setTile")
+  public void player_setTile(int relativeX, int relativeY, int relativeZ) {
+    player_setTile(serverWrapper.getFirstPlayer().getName(), relativeX, relativeY, relativeZ);
+  }
+
+  @RPC("player.setTile")
+  public void player_setTile(String playerName, int relativeX, int relativeY, int relativeZ) {
+    Player player = serverWrapper.getPlayerByName(playerName);
+    Position newPosition =
+        positionRelativeTo(new Position(relativeX, relativeY, relativeZ), origin);
+    player.teleportTo(newPosition); // note: this appears to automatically retain pitch/yaw of player
+  }
+
   public static class BlockEvent {
     public static BlockEvent fromBlockRightClock(
         BlockRightClickHook blockRightClick,

@@ -364,6 +364,9 @@ public class OriginalApiTest extends InWorldTestSupport {
 
       setUpAtPlayerOrigin(p);
 
+      getServerWrapper().getFirstPlayer().setPitch(-74f);
+      getServerWrapper().getFirstPlayer().setRotation(89f);
+
       // initial position
 
       assertEquals(
@@ -385,6 +388,11 @@ public class OriginalApiTest extends InWorldTestSupport {
               (int) p.getY() + 5,
               (int) p.getZ() + 5),
           getServerWrapper().getFirstPlayer().getPosition());
+
+      // make sure the pitch and yaw are maintained
+
+      assertEquals(-74, (int)getServerWrapper().getFirstPlayer().getPitch());
+      assertEquals(89, (int)getServerWrapper().getFirstPlayer().getRotation());
 
       // when player name is blank, default to first player
 
