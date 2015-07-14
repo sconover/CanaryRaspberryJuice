@@ -353,4 +353,49 @@ public class OriginalApiTest extends InWorldTestSupport {
       assertEquals(Lists.newArrayList(expected), getTestOut().sends);
     }
   }
+
+  @Test
+  public void test_player_setTile() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+
+      Position p = nextTestPosition("player.setTile");
+
+      // make the origin == p
+
+      setUpAtPlayerOrigin(p);
+
+      // initial position
+
+      assertEquals(
+          new Position(
+              (int) p.getX() + PLAYER_PLACEMENT_X_OFFSET,
+              (int) p.getY() + PLAYER_PLACEMENT_Y_OFFSET,
+              (int) p.getZ() + PLAYER_PLACEMENT_Z_OFFSET),
+          getServerWrapper().getFirstPlayer().getPosition());
+
+
+      // move the player diagonally
+
+      getCommandHandler().handleLine(
+          String.format("player.setTile(%s,5,5,5)", getServerWrapper().getFirstPlayer().getName()));
+
+      assertEquals(
+          new Position(
+              (int) p.getX() + 5,
+              (int) p.getY() + 5,
+              (int) p.getZ() + 5),
+          getServerWrapper().getFirstPlayer().getPosition());
+
+      // when player name is blank, default to first player
+
+      getCommandHandler().handleLine("player.setTile(7,7,7)");
+
+      assertEquals(
+          new Position(
+              (int) p.getX() + 7,
+              (int) p.getY() + 7,
+              (int) p.getZ() + 7),
+          getServerWrapper().getFirstPlayer().getPosition());
+    }
+  }
 }
