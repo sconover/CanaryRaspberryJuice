@@ -406,4 +406,43 @@ public class OriginalApiTest extends InWorldTestSupport {
           getServerWrapper().getFirstPlayer().getPosition());
     }
   }
+
+  @Test
+  public void test_player_getPos() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+
+      Position p = nextTestPosition("player.getPos");
+
+      // make the origin == p
+
+      setUpAtPlayerOrigin(p);
+
+      // TODO: provide comment guidance in the other tests along this lines of this one.
+
+      // player.getPos position result is relative to the origin (spawn location)
+
+      getCommandHandler().handleLine(
+          String.format("player.getPos(%s)", getServerWrapper().getFirstPlayer().getName()));
+
+      assertEquals(1, getTestOut().sends.size());
+      assertEquals(
+          String.format("%.1f,%.1f,%.1f",
+              (float) PLAYER_PLACEMENT_X_OFFSET,
+              (float) PLAYER_PLACEMENT_Y_OFFSET,
+              (float)PLAYER_PLACEMENT_Z_OFFSET),
+          getTestOut().sends.get(0));
+
+      // when player name is blank, default to first player
+
+      getCommandHandler().handleLine("player.getPos()");
+
+      assertEquals(2, getTestOut().sends.size());
+      assertEquals(
+          String.format("%.1f,%.1f,%.1f",
+              (float) PLAYER_PLACEMENT_X_OFFSET,
+              (float) PLAYER_PLACEMENT_Y_OFFSET,
+              (float) PLAYER_PLACEMENT_Z_OFFSET),
+          getTestOut().sends.get(1));
+    }
+  }
 }
