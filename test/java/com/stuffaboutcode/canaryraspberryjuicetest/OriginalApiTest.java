@@ -13,6 +13,7 @@ import net.canarymod.api.inventory.ItemType;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Position;
+import net.canarymod.hook.player.BlockRightClickHook;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -241,24 +242,46 @@ public class OriginalApiTest extends InWorldTestSupport {
 
   @Test
   public void test_events_block_hits() throws Exception {
-    if (getServerWrapper().hasPlayers()) { // TODO maybe this is lame. assert existenace of logged-in player?
-      getServerWrapper().getFirstPlayer().getInventory()
-          .setSlot(ItemType.GoldSword.getId(), 1, 0);
+    if (getServerWrapper().hasPlayers()) {
 
-      getServerWrapper().getFirstPlayer().getInventory().setSlot(
-          getServerWrapper().getFirstPlayer().getInventory().getSelectedHotbarSlotId(),
-          getServerWrapper().getFirstPlayer().getInventory().getSlot(0));
+      // TODO: make PlayerWrapper?
+      makeFirstPlayerWieldItem(getServerWrapper().getFirstPlayer(), ItemType.GoldSword);
 
-      //String expectedPlayerIdsStr = getServerWrapper().getPlayers().stream()
-      //    .map(Player::getID)
-      //    .map(String::valueOf)
-      //    .collect(Collectors.joining("|"));
-      //
-      //getCommandHandler().handleLine("world.getPlayerEntityIds()");
-      //
-      //assertEquals(
-      //    Lists.newArrayList(expectedPlayerIdsStr),
-      //    getTestOut().sends);
+      Position p = nextTestPosition("block hit event");
+
+      getCommandHandler().handleLine(
+          String.format("world.setBlock(%d,%d,%d,%d)",
+              (int) p.getX(),
+              (int) p.getY(),
+              (int) p.getZ(),
+              BlockType.RedstoneBlock.getId()));
+
+      Block b = getServerWrapper().getWorld().getBlockAt(p);
+
+      getPluginListener().onBlockHit(new BlockRightClickHook(getServerWrapper().getFirstPlayer(), b));
+
+      getCommandHandler().handleLine("events.block.hits()");
+
+      int expectedFace = 7;
+
+      assertEquals(
+          Lists.newArrayList(String.format("%d,%d,%d,%d,%d",
+              (int)p.getX(),
+              (int)p.getY(),
+              (int)p.getZ(),
+              expectedFace,
+              getServerWrapper().getFirstPlayer().getID())),
+          getTestOut().sends);
     }
+  }
+
+  private void makeFirstPlayerWieldItem(Player player, ItemType itemType) {
+    //TODO extract if this is generally useful
+    player.getInventory()
+        .setSlot(itemType.getId(), 0, 0);
+
+    player.getInventory().setSlot(
+        player.getInventory().getSelectedHotbarSlotId(),
+        player.getInventory().getSlot(0));
   }
 }

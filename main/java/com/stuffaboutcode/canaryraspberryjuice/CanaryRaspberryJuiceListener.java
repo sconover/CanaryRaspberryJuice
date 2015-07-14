@@ -18,7 +18,7 @@ import net.canarymod.plugin.PluginListener;
 
 public class CanaryRaspberryJuiceListener implements PluginListener {
 	
-	private CanaryRaspberryJuicePlugin plugin;
+	private final RemoteSessionsHolder remoteSessionsHolder;
 	
 	// Tools (swords) which can be used to hit blocks
 	public static final Set<Integer> blockHitDetectionTools = new HashSet<Integer>(Arrays.asList(
@@ -29,8 +29,8 @@ public class CanaryRaspberryJuiceListener implements PluginListener {
 			ItemType.WoodSword.getId()));
 	
 	// Class constructor
-	public CanaryRaspberryJuiceListener(CanaryRaspberryJuicePlugin plugin) {
-		this.plugin = plugin;
+	public CanaryRaspberryJuiceListener(RemoteSessionsHolder remoteSessionsHolder) {
+		this.remoteSessionsHolder = remoteSessionsHolder;
 	}
     
 	/*@HookHandler
@@ -41,7 +41,7 @@ public class CanaryRaspberryJuiceListener implements PluginListener {
 	@HookHandler
 	public void onTick(ServerTickHook tickHook) {
 		//called each tick of the server it gets all the remote sessions to run
-		Iterator<RemoteSession> sI = plugin.sessions.iterator();
+		Iterator<RemoteSession> sI = remoteSessionsHolder.get().iterator();
 		while(sI.hasNext()) {
 			RemoteSession s = sI.next();
 			if (s.isPendingRemoval()) {
@@ -65,8 +65,9 @@ public class CanaryRaspberryJuiceListener implements PluginListener {
 		if (itemHeld != null) {
 			// is the player holding a sword
 			if (blockHitDetectionTools.contains(itemHeld.getId())) {
+				System.out.println("block hit!");
 				// add the hook event to each session, the session can then decide what to do with it
-				for (RemoteSession session: plugin.sessions) {
+				for (RemoteSession session: remoteSessionsHolder.get()) {
 					session.queueBlockHit(hitHook);
 				}
 			}
@@ -79,7 +80,7 @@ public class CanaryRaspberryJuiceListener implements PluginListener {
 		//plugin.getLogman().info("ChatHook fired");
 		
 		// add the chat hook event to each session, the session can then decide what to do with it
-		for (RemoteSession session: plugin.sessions) {
+		for (RemoteSession session: remoteSessionsHolder.get()) {
 			session.queueChatPost(chatHook);
 		}
 	}

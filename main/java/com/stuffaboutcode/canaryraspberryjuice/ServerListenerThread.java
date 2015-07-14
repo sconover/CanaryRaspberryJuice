@@ -28,7 +28,7 @@ public class ServerListenerThread implements Runnable {
 				Socket newConnection = serverSocket.accept();
 				if (!running) return;
 				plugin.handleConnection(
-						new RemoteSession(Canary.getServer(), plugin.getLogman(), newConnection));
+						RemoteSession.create(Canary.getServer(), plugin.getLogman(), newConnection));
 			} catch (Exception e) {
 				// if the server thread is still running raise an error
 				if (running) {

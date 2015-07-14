@@ -547,4 +547,8 @@ public class CommandHandler {
     double z = Math.cos(rotation) * Math.cos(pitch);
     return new Vector3D(x, y, z);
   }
+
+  public RemoteSession.Out getOut() {
+    return out;
+  }
 }

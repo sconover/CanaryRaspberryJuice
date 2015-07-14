@@ -27,7 +27,9 @@ public class CanaryRaspberryJuicePlugin extends Plugin {
 		int port = config.getPort();
 		
 		//register the listener
-		Canary.hooks().registerListener(new CanaryRaspberryJuiceListener(this), this);
+		Canary.hooks().registerListener(
+				new CanaryRaspberryJuiceListener(new PluginSessionsHolder(this)),
+				this);
 		
 		//setup sessions array
 		sessions = new ArrayList<RemoteSession>();
@@ -97,4 +99,16 @@ public class CanaryRaspberryJuicePlugin extends Plugin {
 	}
 	
 
+	public static class PluginSessionsHolder implements RemoteSessionsHolder {
+		private final CanaryRaspberryJuicePlugin plugin;
+
+		public PluginSessionsHolder(
+				CanaryRaspberryJuicePlugin plugin) {
+			this.plugin = plugin;
+		}
+
+		@Override public Iterable<RemoteSession> get() {
+			return plugin.sessions;
+		}
+	}
 }

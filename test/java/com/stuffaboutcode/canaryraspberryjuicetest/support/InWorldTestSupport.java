@@ -1,8 +1,13 @@
 package com.stuffaboutcode.canaryraspberryjuicetest.support;
 
+import com.google.common.collect.Lists;
+import com.stuffaboutcode.canaryraspberryjuice.CanaryRaspberryJuiceListener;
 import com.stuffaboutcode.canaryraspberryjuice.CommandHandler;
 import com.stuffaboutcode.canaryraspberryjuice.CuboidReference;
+import com.stuffaboutcode.canaryraspberryjuice.RemoteSession;
+import com.stuffaboutcode.canaryraspberryjuice.RemoteSessionsHolder;
 import com.stuffaboutcode.canaryraspberryjuice.ServerWrapper;
+import java.util.ArrayDeque;
 import net.canarymod.Canary;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
@@ -23,6 +28,7 @@ public abstract class InWorldTestSupport {
   private static int xOffset = 2;
   private TestOut testOut;
   private CommandHandler commandHandler;
+  private CanaryRaspberryJuiceListener pluginListener;
 
   public ServerWrapper getServerWrapper() {
     return serverWrapper;
@@ -36,17 +42,35 @@ public abstract class InWorldTestSupport {
     return commandHandler;
   }
 
+  public CanaryRaspberryJuiceListener getPluginListener() {
+    return pluginListener;
+  }
+
   @Before
   public void setUp() throws Exception {
     serverWrapper = new ServerWrapper(Canary.getServer());
     serverWrapper.getWorld().setSpawnLocation(new Location(serverWrapper.getWorld(), new Position(0,0,0)));
 
     testOut = new TestOut();
+    Logman logman = Logman.getLogman("Test-logman");
+
     commandHandler = new CommandHandler(
         Canary.getServer(),
         new ServerWrapper(Canary.getServer()),
-        Logman.getLogman("Test-logman"),
+        logman,
         testOut);
+
+    final RemoteSession session = new RemoteSession(
+      logman,
+        new RemoteSession.ToOutQueue(new ArrayDeque<>()),
+        commandHandler,
+        null);
+
+    pluginListener = new CanaryRaspberryJuiceListener(new RemoteSessionsHolder() {
+      @Override public Iterable<RemoteSession> get() {
+        return Lists.newArrayList(session);
+      }
+    });
   }
 
   public Position nextTestPosition(String name) {

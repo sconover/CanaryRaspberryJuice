@@ -31,8 +31,6 @@ public class RemoteSession {
 
 	private ArrayDeque<String> inQueue = new ArrayDeque<String>();
 
-	private ArrayDeque<String> outQueue = new ArrayDeque<String>();
-
 	public boolean running = true;
 
 	private int maxCommandsPerTick = 9000;
@@ -41,12 +39,23 @@ public class RemoteSession {
 	
 	private final ToOutQueue toOutQueue;
 
-	public RemoteSession(Server server, Logman logman, Socket socket) throws IOException {
+	public static RemoteSession create(Server server, Logman logman, Socket socket) throws IOException {
+		ToOutQueue toOutQueue = new ToOutQueue(new ArrayDeque<String>());
+		RemoteSession remoteSession = new RemoteSession(
+				logman,
+				toOutQueue,
+				new CommandHandler(server, new ServerWrapper(server), logman,
+						toOutQueue),
+				socket);
+		remoteSession.init();
+		return remoteSession;
+	}
+
+	public RemoteSession(Logman logman, ToOutQueue toOutQueue, CommandHandler commandHandler, Socket socket) throws IOException {
 		this.logman = logman;
-		this.toOutQueue = new ToOutQueue(outQueue);
-		this.commandHandler = new CommandHandler(server, new ServerWrapper(server), logman, toOutQueue);
+		this.toOutQueue = toOutQueue;
+		this.commandHandler = commandHandler;
 		this.socket = socket;
-		init();
 	}
 
 	public void init() throws IOException {
@@ -161,7 +170,7 @@ public class RemoteSession {
 			while (running) {
 				try {
 					String line;
-					while((line = outQueue.poll()) != null) {
+					while((line = toOutQueue.poll()) != null) {
 						out.write(line);
 						out.write('\n');
 					}
@@ -239,6 +248,10 @@ public class RemoteSession {
 
 		public boolean isPendingRemoval() {
 			return pendingRemoval;
+		}
+
+		public String poll() {
+			return this.outQueue.poll();
 		}
 
 		@Override public void send(String str) {
