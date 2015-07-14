@@ -21,7 +21,6 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import static com.stuffaboutcode.canaryraspberryjuice.Util.positionRelativeTo;
-import static com.stuffaboutcode.canaryraspberryjuice.Util.positionToApiString;
 
 public class OriginalApi {
   // origin is the spawn location on the world
@@ -121,15 +120,15 @@ public class OriginalApi {
   }
 
   @RPC("player.getTile")
-  public Position player_getTile() {
+  public BlockPosition player_getTile() {
     //TODO: what do we do here if there's no player logged in?
     return player_getTile(serverWrapper.getFirstPlayer().getName());
   }
 
   @RPC("player.getTile")
-  public Position player_getTile(String playerName) {
+  public BlockPosition player_getTile(String playerName) {
     Player player = serverWrapper.getPlayerByName(playerName);
-    return positionRelativeTo(player.getLocation(), origin);
+    return BlockPosition.fromPosition(positionRelativeTo(player.getLocation(), origin));
   }
 
   @RPC("player.setTile")
@@ -137,12 +136,34 @@ public class OriginalApi {
     player_setTile(serverWrapper.getFirstPlayer().getName(), relativeX, relativeY, relativeZ);
   }
 
+  //TODO: convert all (int)p.getX to p.getBlockX, etc
+
   @RPC("player.setTile")
   public void player_setTile(String playerName, int relativeX, int relativeY, int relativeZ) {
     Player player = serverWrapper.getPlayerByName(playerName);
     Position newPosition =
-        positionRelativeTo(new Position(relativeX, relativeY, relativeZ), origin);
-    player.teleportTo(newPosition); // note: this appears to automatically retain pitch/yaw of player
+        new Position(
+            origin.getBlockX() + relativeX,
+            origin.getBlockY() + relativeY,
+            origin.getBlockZ() + relativeZ);
+
+    // maintain existing player pitch/yaw
+    Location newLocation = new Location(serverWrapper.getWorld(), newPosition);
+    newLocation.setPitch(player.getPitch());
+    newLocation.setRotation(player.getRotation());
+    player.teleportTo(newLocation);
+  }
+
+  @RPC("player.getPos")
+  public Position player_getPos() {
+    //TODO: what do we do here if there's no player logged in?
+    return player_getPos(serverWrapper.getFirstPlayer().getName());
+  }
+
+  @RPC("player.getPos")
+  public Position player_getPos(String playerName) {
+    Player player = serverWrapper.getPlayerByName(playerName);
+    return positionRelativeTo(player.getLocation(), origin);
   }
 
   public static class BlockEvent {
@@ -169,12 +190,32 @@ public class OriginalApi {
 
     public String toApiResult() {
       StringBuilder sb = new StringBuilder();
-      sb.append(positionToApiString(pos));
+      sb.append(BlockPosition.fromPosition(pos).toApiResult());
       sb.append(",");
       sb.append(RemoteSession.blockFaceToNotch(face));
       sb.append(",");
       sb.append(entity.getID());
       return sb.toString();
+    }
+  }
+
+  public static class BlockPosition {
+    public static BlockPosition fromPosition(Position p) {
+      return new BlockPosition(p.getBlockX(), p.getBlockY(), p.getBlockZ());
+    }
+
+    private final int x;
+    private final int y;
+    private final int z;
+
+    public BlockPosition(int x, int y, int z) {
+      this.x = x;
+      this.y = y;
+      this.z = z;
+    }
+
+    public String toApiResult() {
+      return String.format("%d,%d,%d", x, y, z);
     }
   }
 }

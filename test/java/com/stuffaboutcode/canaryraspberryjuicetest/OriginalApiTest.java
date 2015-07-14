@@ -429,7 +429,7 @@ public class OriginalApiTest extends InWorldTestSupport {
           String.format("%.1f,%.1f,%.1f",
               (float) PLAYER_PLACEMENT_X_OFFSET,
               (float) PLAYER_PLACEMENT_Y_OFFSET,
-              (float)PLAYER_PLACEMENT_Z_OFFSET),
+              (float) PLAYER_PLACEMENT_Z_OFFSET),
           getTestOut().sends.get(0));
 
       // when player name is blank, default to first player

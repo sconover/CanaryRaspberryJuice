@@ -11,7 +11,6 @@ public class Util {
   }
 
   public static String positionToApiString(Position p) {
-    return String.format("%d,%d,%d", (int)p.getX(), (int)p.getY(), (int)p.getZ());
+    return String.format("%.1f,%.1f,%.1f", p.getX(), p.getY(), p.getZ());
   }
-
 }

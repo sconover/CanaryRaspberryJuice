@@ -62,7 +62,7 @@ public class TestCanaryModServer {
 
       TestPluginDescriptor helloPluginDescriptor =
           new TestPluginDescriptor(
-              new File(projectRootDir, "classes/production/main").getAbsolutePath(),
+              new File(projectRootDir, "main/target/classes").getAbsolutePath(),
               new LinkedHashMap<String, String>(){{
                 put("main-class", "mctest.hello.HelloPlugin");
                 put("name", "HelloPlugin");
@@ -72,7 +72,7 @@ public class TestCanaryModServer {
 
       TestPluginDescriptor raspberryJuicePluginDescriptor =
           new TestPluginDescriptor(
-              new File(projectRootDir, "classes/production/main").getAbsolutePath(),
+              new File(projectRootDir, "main/target/classes").getAbsolutePath(),
               new LinkedHashMap<String, String>(){{
                 put("main-class", "com.stuffaboutcode.canaryraspberryjuice.CanaryRaspberryJuicePlugin");
                 put("name", "CanaryRaspberryJuicePlugin");
@@ -195,15 +195,15 @@ public class TestCanaryModServer {
                     .stream()
                     .collect(Collectors.joining("/"));
             Path path = new File(parentDir, subDir).toPath();
-            System.out.println("Watching path for changes: " + path.toString());
+
             WatchService watchService =
                 path.getFileSystem().newWatchService();
-
             // see http://stackoverflow.com/questions/9588737/is-java-7-watchservice-slow-for-anyone-else
             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
               @Override
               public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
                   throws IOException {
+                System.out.println("Watching path for changes: " + dir.toString());
                 dir.register(watchService,
                     new WatchEvent.Kind[] {ENTRY_CREATE, ENTRY_MODIFY},
                     SensitivityWatchEventModifier.HIGH);

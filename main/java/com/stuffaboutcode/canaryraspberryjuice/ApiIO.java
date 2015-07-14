@@ -85,8 +85,11 @@ public class ApiIO {
       }
       return Joiner.on("|").join(strings);
 
+    } else if (objectResult instanceof OriginalApi.BlockPosition) {
+      return ((OriginalApi.BlockPosition) objectResult).toApiResult();
+
     } else if (objectResult instanceof Position) {
-      return Util.positionToApiString((Position)objectResult);
+      return Util.positionToApiString((Position) objectResult);
 
     }
     throw new RuntimeException(String.format(

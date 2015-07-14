@@ -119,17 +119,19 @@ public class CommandHandler {
 
       // get the world
       World world = getWorld();
+      //
+      //if (c.equals("player.getPos")) {
+      //  String name = null;
+      //  if (args.length > 0) {
+      //    name = args[0];
+      //  }
+      //  Player currentPlayer = getCurrentPlayer(name);
+      //  send(locationToRelative(currentPlayer.getLocation()));
+      //
+      //  // player.setPos
+      //} else
 
-      if (c.equals("player.getPos")) {
-        String name = null;
-        if (args.length > 0) {
-          name = args[0];
-        }
-        Player currentPlayer = getCurrentPlayer(name);
-        send(locationToRelative(currentPlayer.getLocation()));
-
-        // player.setPos
-      } else if (c.equals("player.setPos")) {
+      if (c.equals("player.setPos")) {
         String name = null, x = args[0], y = args[1], z = args[2];
         if (args.length > 3) {
           name = args[0];
