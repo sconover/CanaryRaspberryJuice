@@ -27,8 +27,8 @@ public class OriginalApiTest extends InWorldTestSupport {
   /**
    * TODO:
    *
-   * - slow things down... take ticks/sec into
-   * consideration... adjust to wall clock time. e.g. 200 ms / write operation
+   * - slow things down... take ticks/sec into consideration... adjust to wall clock time. e.g. 200
+   * ms / write operation
    *
    * - stay end to end for a while...
    */
@@ -127,9 +127,9 @@ public class OriginalApiTest extends InWorldTestSupport {
             BlockType.LimeWool.getData()));
 
     Block block2 = getServerWrapper().getWorld().getBlockAt(
-        (int)p.getX() + 1,
-        (int)p.getY(),
-        (int)p.getZ());
+        (int) p.getX() + 1,
+        (int) p.getY(),
+        (int) p.getZ());
 
     assertEquals(BlockType.LimeWool, block2.getType());
     assertEquals(BlockType.LimeWool.getData(), block2.getType().getData());
@@ -156,9 +156,9 @@ public class OriginalApiTest extends InWorldTestSupport {
             BlockType.RedstoneBlock.getId()));
 
     Map<BlockType, List<Block>> blockTypeToBlocks =
-      CuboidReference.fromCorners(cubeCorner, otherCubeCorner)
-          .fetchBlocks(getServerWrapper().getWorld())
-          .blockTypeToBlocks();
+        CuboidReference.fromCorners(cubeCorner, otherCubeCorner)
+            .fetchBlocks(getServerWrapper().getWorld())
+            .blockTypeToBlocks();
 
     // there's a 2x2x2 set of redstone blocks
     assertEquals(Sets.newHashSet(BlockType.RedstoneBlock), blockTypeToBlocks.keySet());
@@ -178,11 +178,11 @@ public class OriginalApiTest extends InWorldTestSupport {
     // out of this 3x3x3 cube, there's a 2x2x2 set of redstone blocks,
     // and the rest is air
     assertEquals(Sets.newHashSet(
-        BlockType.RedstoneBlock,
-        BlockType.Air),
+            BlockType.RedstoneBlock,
+            BlockType.Air),
         blockTypeToBlocks2.keySet());
     assertEquals(8, blockTypeToBlocks2.get(BlockType.RedstoneBlock).size());
-    assertEquals(27-8, blockTypeToBlocks2.get(BlockType.Air).size());
+    assertEquals(27 - 8, blockTypeToBlocks2.get(BlockType.Air).size());
   }
 
   @Test
@@ -233,7 +233,6 @@ public class OriginalApiTest extends InWorldTestSupport {
     }
   }
 
-
   //[09:14] <svdragster> Are you trying to force a player to select a certain slot, or are you trying to put an item in the players hand?
   //    [09:25] <Guest32326> put an item in a player's hand
   //    [09:55] <svdragster> then do and do inventory.setSlot(getSelectedHotbarSlotId(), item)
@@ -258,8 +257,10 @@ public class OriginalApiTest extends InWorldTestSupport {
 
       Block b = getServerWrapper().getWorld().getBlockAt(p);
 
-      getPluginListener().onBlockHit(new BlockRightClickHook(getServerWrapper().getFirstPlayer(), b));
-      getPluginListener().onBlockHit(new BlockRightClickHook(getServerWrapper().getFirstPlayer(), b));
+      getPluginListener().onBlockHit(
+          new BlockRightClickHook(getServerWrapper().getFirstPlayer(), b));
+      getPluginListener().onBlockHit(
+          new BlockRightClickHook(getServerWrapper().getFirstPlayer(), b));
 
       getCommandHandler().handleLine("events.block.hits()");
 
@@ -296,7 +297,8 @@ public class OriginalApiTest extends InWorldTestSupport {
 
       Block b = getServerWrapper().getWorld().getBlockAt(p);
 
-      getPluginListener().onBlockHit(new BlockRightClickHook(getServerWrapper().getFirstPlayer(), b));
+      getPluginListener().onBlockHit(
+          new BlockRightClickHook(getServerWrapper().getFirstPlayer(), b));
 
       getCommandHandler().handleLine("events.clear()");
 
@@ -309,20 +311,39 @@ public class OriginalApiTest extends InWorldTestSupport {
 
       assertEquals(
           Lists.newArrayList(String.format("%d,%d,%d,%d,%d",
-              (int)p.getX(),
-              (int)p.getY(),
-              (int)p.getZ(),
+              (int) p.getX(),
+              (int) p.getY(),
+              (int) p.getZ(),
               expectedFace,
               getServerWrapper().getFirstPlayer().getID())),
           getTestOut().sends);
     }
   }
 
-  private void makeFirstPlayerWieldItem(Player player, ItemType itemType) {
-    player.getInventory().setSlot(itemType.getId(), 0, 0);
+  @Test
+  public void test_player_getTile() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+      Position p = nextTestPosition("player.getTile");
 
-    player.getInventory().setSlot(
-        player.getInventory().getSelectedHotbarSlotId(),
-        player.getInventory().getSlot(0));
+      getCommandHandler().handleLine("player.getTile()");
+
+      assertEquals(
+          Lists.newArrayList(String.format("%d,%d,%d",
+              (int) p.getX() + PLAYER_PLACEMENT_X_OFFSET,
+              (int) p.getY() + PLAYER_PLACEMENT_Y_OFFSET,
+              (int) p.getZ() + PLAYER_PLACEMENT_Z_OFFSET)),
+          getTestOut().sends);
+
+      setUpAtPlayerOrigin(new Position(3, 3, 3));
+
+      getCommandHandler().handleLine("player.getTile()");
+
+      assertEquals(
+          Lists.newArrayList(String.format("%d,%d,%d",
+              (int) p.getX() + PLAYER_PLACEMENT_X_OFFSET - 3,
+              (int) p.getY() + PLAYER_PLACEMENT_Y_OFFSET - 3,
+              (int) p.getZ() + PLAYER_PLACEMENT_Z_OFFSET - 3)),
+          getTestOut().sends);
+    }
   }
 }

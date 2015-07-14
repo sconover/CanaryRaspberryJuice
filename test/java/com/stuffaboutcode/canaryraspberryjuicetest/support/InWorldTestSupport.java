@@ -7,8 +7,11 @@ import com.stuffaboutcode.canaryraspberryjuice.CuboidReference;
 import com.stuffaboutcode.canaryraspberryjuice.RemoteSession;
 import com.stuffaboutcode.canaryraspberryjuice.RemoteSessionsHolder;
 import com.stuffaboutcode.canaryraspberryjuice.ServerWrapper;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import net.canarymod.Canary;
+import net.canarymod.api.entity.living.humanoid.Player;
+import net.canarymod.api.inventory.ItemType;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.blocks.CanarySign;
@@ -24,6 +27,10 @@ import org.junit.Before;
  * for use in in-world testing.
  */
 public abstract class InWorldTestSupport {
+  public static final int PLAYER_PLACEMENT_X_OFFSET = 0;
+  public static final int PLAYER_PLACEMENT_Y_OFFSET = 10;
+  public static final int PLAYER_PLACEMENT_Z_OFFSET = -30;
+
   private ServerWrapper serverWrapper;
   private static int xOffset = 2;
   private TestOut testOut;
@@ -48,8 +55,13 @@ public abstract class InWorldTestSupport {
 
   @Before
   public void setUp() throws Exception {
+    setUpAtPlayerOrigin(new Position(0, 0, 0));
+  }
+
+  public void setUpAtPlayerOrigin(Position position) throws IOException {
     serverWrapper = new ServerWrapper(Canary.getServer());
-    serverWrapper.getWorld().setSpawnLocation(new Location(serverWrapper.getWorld(), new Position(0,0,0)));
+    serverWrapper.getWorld().setSpawnLocation(new Location(serverWrapper.getWorld(),
+        position));
 
     testOut = new TestOut();
     Logman logman = Logman.getLogman("Test-logman");
@@ -71,6 +83,14 @@ public abstract class InWorldTestSupport {
         return Lists.newArrayList(session);
       }
     });
+  }
+
+  public void makeFirstPlayerWieldItem(Player player, ItemType itemType) {
+    player.getInventory().setSlot(itemType.getId(), 0, 0);
+
+    player.getInventory().setSlot(
+        player.getInventory().getSelectedHotbarSlotId(),
+        player.getInventory().getSlot(0));
   }
 
   public Position nextTestPosition(String name) {
@@ -96,7 +116,8 @@ public abstract class InWorldTestSupport {
 
     if (serverWrapper.hasPlayers()) {
       serverWrapper.getFirstPlayer().teleportTo(
-          LocationHelper.getLocationFacingPosition(testPosition, 0, 10, -30));
+          LocationHelper.getLocationFacingPosition(testPosition,
+              PLAYER_PLACEMENT_X_OFFSET, PLAYER_PLACEMENT_Y_OFFSET, PLAYER_PLACEMENT_Z_OFFSET));
     }
     //try {
     //  Thread.sleep(500);
