@@ -10,7 +10,6 @@ import java.util.ArrayDeque;
 import net.canarymod.api.Server;
 import net.canarymod.api.world.blocks.BlockFace;
 import net.canarymod.hook.player.BlockRightClickHook;
-import net.canarymod.hook.player.ChatHook;
 import net.canarymod.logger.Logman;
 
 // Remote session class manages commands
@@ -218,11 +217,6 @@ public class RemoteSession {
 	// add a block hit to the queue to be processed
 	public void queueBlockHit(BlockRightClickHook hitHook) {
 		commandHandler.queueBlockHit(hitHook);
-	}
-
-	// add a chat posted to the queue to be processed
-	public void queueChatPost(ChatHook chatHook) {
-		commandHandler.queueChatPost(chatHook);
 	}
 
 	public boolean isPendingRemoval() {

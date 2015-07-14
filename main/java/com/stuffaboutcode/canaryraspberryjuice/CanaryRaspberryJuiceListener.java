@@ -9,7 +9,6 @@ import net.canarymod.api.inventory.Item;
 import net.canarymod.api.inventory.ItemType;
 import net.canarymod.hook.HookHandler;
 import net.canarymod.hook.player.BlockRightClickHook;
-import net.canarymod.hook.player.ChatHook;
 import net.canarymod.hook.system.ServerTickHook;
 import net.canarymod.plugin.PluginListener;
 
@@ -73,16 +72,4 @@ public class CanaryRaspberryJuiceListener implements PluginListener {
 			}
 		}
 	}
-	
-	@HookHandler
-	public void onChatPost(ChatHook chatHook) {
-		//DEBUG
-		//plugin.getLogman().info("ChatHook fired");
-		
-		// add the chat hook event to each session, the session can then decide what to do with it
-		for (RemoteSession session: remoteSessionsHolder.get()) {
-			session.queueChatPost(chatHook);
-		}
-	}
-	
 }

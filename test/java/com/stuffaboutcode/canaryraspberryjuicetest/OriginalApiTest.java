@@ -275,10 +275,48 @@ public class OriginalApiTest extends InWorldTestSupport {
     }
   }
 
+  @Test
+  public void test_events_clear() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+
+      // TODO: make PlayerWrapper?
+      makeFirstPlayerWieldItem(getServerWrapper().getFirstPlayer(), ItemType.GoldSword);
+
+      Position p = nextTestPosition("block hit event");
+
+      getCommandHandler().handleLine(
+          String.format("world.setBlock(%d,%d,%d,%d)",
+              (int) p.getX(),
+              (int) p.getY(),
+              (int) p.getZ(),
+              BlockType.RedstoneBlock.getId()));
+
+      Block b = getServerWrapper().getWorld().getBlockAt(p);
+
+      getPluginListener().onBlockHit(new BlockRightClickHook(getServerWrapper().getFirstPlayer(), b));
+
+      getCommandHandler().handleLine("events.clear()");
+
+      getPluginListener().onBlockHit(
+          new BlockRightClickHook(getServerWrapper().getFirstPlayer(), b));
+
+      getCommandHandler().handleLine("events.block.hits()");
+
+      int expectedFace = 7;
+
+      assertEquals(
+          Lists.newArrayList(String.format("%d,%d,%d,%d,%d",
+              (int)p.getX(),
+              (int)p.getY(),
+              (int)p.getZ(),
+              expectedFace,
+              getServerWrapper().getFirstPlayer().getID())),
+          getTestOut().sends);
+    }
+  }
+
   private void makeFirstPlayerWieldItem(Player player, ItemType itemType) {
-    //TODO extract if this is generally useful
-    player.getInventory()
-        .setSlot(itemType.getId(), 0, 0);
+    player.getInventory().setSlot(itemType.getId(), 0, 0);
 
     player.getInventory().setSlot(
         player.getInventory().getSelectedHotbarSlotId(),

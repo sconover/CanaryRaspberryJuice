@@ -14,7 +14,6 @@ import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.api.world.position.Vector3D;
 import net.canarymod.hook.player.BlockRightClickHook;
-import net.canarymod.hook.player.ChatHook;
 import net.canarymod.logger.Logman;
 import net.minecraft.item.EnumDyeColor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -30,7 +29,6 @@ public class CommandHandler {
 
   private final ArrayDeque<BlockRightClickHook> blockHitQueue =
       new ArrayDeque<BlockRightClickHook>();
-  private final ArrayDeque<ChatHook> chatPostedQueue = new ArrayDeque<ChatHook>();
 
   private Player attachedPlayer;
   private final Map<Pair<String, Integer>, Pair<Object, Method>>
@@ -124,7 +122,6 @@ public class CommandHandler {
 
       if (c.equals("events.clear")) {
         blockHitQueue.clear();
-        chatPostedQueue.clear();
 
         // events.block.hits
       } else if (c.equals("events.block.hits")) {
@@ -140,22 +137,6 @@ public class CommandHandler {
           b.append(",");
           b.append(event.getPlayer().getID());
           if (blockHitQueue.size() > 0) {
-            b.append("|");
-          }
-        }
-        //DEBUG
-        //logman.info(b.toString());
-        send(b.toString());
-
-        // events.chat.posts
-      } else if (c.equals("events.chat.posts")) {
-        StringBuilder b = new StringBuilder();
-        ChatHook event;
-        while ((event = chatPostedQueue.poll()) != null) {
-          b.append(event.getPlayer().getID());
-          b.append(",");
-          b.append(event.getMessage());
-          if (chatPostedQueue.size() > 0) {
             b.append("|");
           }
         }
@@ -367,11 +348,6 @@ public class CommandHandler {
   // add a block hit to the queue to be processed
   public void queueBlockHit(BlockRightClickHook hitHook) {
     blockHitQueue.add(hitHook);
-  }
-
-  // add a chat posted to the queue to be processed
-  public void queueChatPost(ChatHook chatHook) {
-    chatPostedQueue.add(chatHook);
   }
 
   // get the host player, i.e. the first player on the server
