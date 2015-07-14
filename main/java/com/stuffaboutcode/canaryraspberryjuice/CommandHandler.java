@@ -120,16 +120,7 @@ public class CommandHandler {
       // get the world
       World world = getWorld();
 
-      if (c.equals("player.getTile")) {
-        String name = null;
-        if (args.length > 0) {
-          name = args[0];
-        }
-        Player currentPlayer = getCurrentPlayer(name);
-        send(blockLocationToRelative(currentPlayer.getLocation()));
-
-        // player.setTile
-      } else if (c.equals("player.setTile")) {
+      if (c.equals("player.setTile")) {
         String name = null, x = args[0], y = args[1], z = args[2];
         if (args.length > 3) {
           name = args[0];

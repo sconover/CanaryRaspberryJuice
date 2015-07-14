@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.blocks.BlockType;
+import net.canarymod.api.world.position.Position;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class ApiIO {
@@ -71,6 +72,9 @@ public class ApiIO {
         strings.add(serializeResult(p));
       }
       return Joiner.on("|").join(strings);
+
+    } else if (objectResult instanceof Position) {
+      return Util.positionToApiString((Position)objectResult);
 
     }
     throw new RuntimeException(String.format(

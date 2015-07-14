@@ -323,27 +323,34 @@ public class OriginalApiTest extends InWorldTestSupport {
   @Test
   public void test_player_getTile() throws Exception {
     if (getServerWrapper().hasPlayers()) {
+
       Position p = nextTestPosition("player.getTile");
 
-      getCommandHandler().handleLine("player.getTile()");
+      // when name is blank, default to first player
 
-      assertEquals(
-          Lists.newArrayList(String.format("%d,%d,%d",
-              (int) p.getX() + PLAYER_PLACEMENT_X_OFFSET,
-              (int) p.getY() + PLAYER_PLACEMENT_Y_OFFSET,
-              (int) p.getZ() + PLAYER_PLACEMENT_Z_OFFSET)),
-          getTestOut().sends);
+      getCommandHandler().handleLine("player.getTile()");
+      getCommandHandler().handleLine(
+          String.format("player.getTile(%s)", getServerWrapper().getFirstPlayer().getName()));
+
+      String expected = String.format("%d,%d,%d",
+          (int) p.getX() + PLAYER_PLACEMENT_X_OFFSET,
+          (int) p.getY() + PLAYER_PLACEMENT_Y_OFFSET,
+          (int) p.getZ() + PLAYER_PLACEMENT_Z_OFFSET);
+
+      assertEquals(Lists.newArrayList(expected, expected), getTestOut().sends);
+
+      // result is relative to player origin
 
       setUpAtPlayerOrigin(new Position(3, 3, 3));
 
       getCommandHandler().handleLine("player.getTile()");
 
-      assertEquals(
-          Lists.newArrayList(String.format("%d,%d,%d",
-              (int) p.getX() + PLAYER_PLACEMENT_X_OFFSET - 3,
-              (int) p.getY() + PLAYER_PLACEMENT_Y_OFFSET - 3,
-              (int) p.getZ() + PLAYER_PLACEMENT_Z_OFFSET - 3)),
-          getTestOut().sends);
+      expected = String.format("%d,%d,%d",
+          (int) p.getX() + PLAYER_PLACEMENT_X_OFFSET - 3,
+          (int) p.getY() + PLAYER_PLACEMENT_Y_OFFSET - 3,
+          (int) p.getZ() + PLAYER_PLACEMENT_Z_OFFSET - 3);
+
+      assertEquals(Lists.newArrayList(expected), getTestOut().sends);
     }
   }
 }

@@ -19,6 +19,9 @@ import net.canarymod.logger.Logman;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import static com.stuffaboutcode.canaryraspberryjuice.Util.positionRelativeTo;
+import static com.stuffaboutcode.canaryraspberryjuice.Util.positionToApiString;
+
 public class OriginalApi {
   // origin is the spawn location on the world
   private final Location origin;
@@ -38,7 +41,7 @@ public class OriginalApi {
   }
 
   @RPC("world.getBlock")
-  public BlockType worldGetBlock(int x, int y, int z) {
+  public BlockType world_getBlock(int x, int y, int z) {
     return CuboidReference.relativeTo(origin, new Position(x, y, z))
         .fetchBlocks(serverWrapper.getWorld())
         .firstBlock()
@@ -46,37 +49,37 @@ public class OriginalApi {
   }
 
   @RPC("world.getBlockWithData")
-  public Pair<BlockType, Short> worldGetBlockWithData(int x, int y, int z) {
-    BlockType blockType = worldGetBlock(x, y, z);
+  public Pair<BlockType, Short> world_setBlockWithData(int x, int y, int z) {
+    BlockType blockType = world_getBlock(x, y, z);
     return ImmutablePair.of(blockType, blockType.getData());
   }
 
   @RPC("world.setBlock")
-  public void setBlock(int x, int y, int z, short blockTypeId) {
-    setBlock(x, y, z, blockTypeId, (short) 0);
+  public void world_setBlock(int x, int y, int z, short blockTypeId) {
+    world_setBlock(x, y, z, blockTypeId, (short) 0);
   }
 
   @RPC("world.setBlock")
-  public void setBlock(int x, int y, int z, short blockTypeId, short blockData) {
-    setBlocks(
+  public void world_setBlock(int x, int y, int z, short blockTypeId, short blockData) {
+    world_setBlocks(
         x, y, z,
         x, y, z,
         blockTypeId, blockData);
   }
 
   @RPC("world.setBlocks")
-  public void setBlocks(
+  public void world_setBlocks(
       int x1, int y1, int z1,
       int x2, int y2, int z2,
       short blockTypeId) {
-    setBlocks(
+    world_setBlocks(
         x1, y1, z1,
         x2, y2, z2,
         blockTypeId, (short) 0);
   }
 
   @RPC("world.setBlocks")
-  public void setBlocks(
+  public void world_setBlocks(
       int x1, int y1, int z1,
       int x2, int y2, int z2,
       short blockTypeId, short blockData) {
@@ -88,23 +91,23 @@ public class OriginalApi {
   }
 
   @RPC("world.getPlayerEntityIds")
-  public Player[] getPlayerEntityIds() {
+  public Player[] world_getPlayerEntityIds() {
     List<Player> allPlayers = serverWrapper.getPlayers();
     return allPlayers.toArray(new Player[allPlayers.size()]);
   }
 
   @RPC("chat.post")
-  public void chatPost(@RawArgString String chatStr) {
+  public void chat_post(@RawArgString String chatStr) {
     serverWrapper.broadcastMessage(chatStr);
   }
 
   @RPC("events.clear")
-  public void clearEvents() {
+  public void events_clear() {
     blockHitQueue.clear();
   }
 
   @RPC("events.block.hits")
-  public String consumeBlockHitEvents() {
+  public String events_block_hits() {
     // this doesn't work with multiplayer! need to think about how this should work
     // [this was an existing comment -steve]
 
@@ -113,14 +116,8 @@ public class OriginalApi {
     while ((event = blockHitQueue.poll()) != null) {
       Block block = event.getBlockClicked();
       Location loc = block.getLocation();
-      String relativeLocation = (loc.getBlockX() - origin.getBlockX())
-          + ","
-          + (loc.getBlockY() - origin.getBlockY())
-          + ","
-          +
-          (loc.getBlockZ() - origin.getBlockZ());
       StringBuilder b = new StringBuilder();
-      b.append(relativeLocation);
+      b.append(positionToApiString(positionRelativeTo(loc, origin)));
       b.append(",");
       b.append(RemoteSession.blockFaceToNotch(block.getFaceClicked()));
       b.append(",");
@@ -128,5 +125,16 @@ public class OriginalApi {
       events.add(b.toString());
     }
     return Joiner.on("|").join(events);
+  }
+
+  @RPC("player.getTile")
+  public Position player_getTile() {
+    return player_getTile(serverWrapper.getFirstPlayer().getName());
+  }
+
+  @RPC("player.getTile")
+  public Position player_getTile(String playerName) {
+    Player player = serverWrapper.getPlayerByName(playerName);
+    return positionRelativeTo(player.getLocation(), origin);
   }
 }
