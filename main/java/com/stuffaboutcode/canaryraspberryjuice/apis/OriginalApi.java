@@ -1,6 +1,5 @@
 package com.stuffaboutcode.canaryraspberryjuice.apis;
 
-import com.google.common.base.Joiner;
 import com.stuffaboutcode.canaryraspberryjuice.CuboidReference;
 import com.stuffaboutcode.canaryraspberryjuice.RPC;
 import com.stuffaboutcode.canaryraspberryjuice.RawArgString;
@@ -9,8 +8,10 @@ import com.stuffaboutcode.canaryraspberryjuice.ServerWrapper;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import net.canarymod.api.entity.Entity;
 import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.blocks.Block;
+import net.canarymod.api.world.blocks.BlockFace;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.api.world.position.Position;
@@ -107,24 +108,16 @@ public class OriginalApi {
   }
 
   @RPC("events.block.hits")
-  public String events_block_hits() {
+  public BlockEvent[] events_block_hits() {
     // this doesn't work with multiplayer! need to think about how this should work
     // [this was an existing comment -steve]
 
-    List<String> events = new ArrayList<String>();
+    List<BlockEvent> blockEventList = new ArrayList<BlockEvent>();
     BlockRightClickHook event;
     while ((event = blockHitQueue.poll()) != null) {
-      Block block = event.getBlockClicked();
-      Location loc = block.getLocation();
-      StringBuilder b = new StringBuilder();
-      b.append(positionToApiString(positionRelativeTo(loc, origin)));
-      b.append(",");
-      b.append(RemoteSession.blockFaceToNotch(block.getFaceClicked()));
-      b.append(",");
-      b.append(event.getPlayer().getID());
-      events.add(b.toString());
+      blockEventList.add(BlockEvent.fromBlockRightClock(event, origin));
     }
-    return Joiner.on("|").join(events);
+    return blockEventList.toArray(new BlockEvent[blockEventList.size()]);
   }
 
   @RPC("player.getTile")
@@ -136,5 +129,38 @@ public class OriginalApi {
   public Position player_getTile(String playerName) {
     Player player = serverWrapper.getPlayerByName(playerName);
     return positionRelativeTo(player.getLocation(), origin);
+  }
+
+  public static class BlockEvent {
+    public static BlockEvent fromBlockRightClock(
+        BlockRightClickHook blockRightClick,
+        Position relativeToPosition) {
+
+      Block block = blockRightClick.getBlockClicked();
+      return new BlockEvent(
+          positionRelativeTo(block.getLocation(), relativeToPosition),
+          block.getFaceClicked(),
+          blockRightClick.getPlayer());
+    }
+
+    private final Position pos;
+    private final BlockFace face;
+    private final Entity entity;
+
+    public BlockEvent(Position pos, BlockFace face, Entity entity) {
+      this.pos = pos;
+      this.face = face;
+      this.entity = entity;
+    }
+
+    public String toApiResult() {
+      StringBuilder sb = new StringBuilder();
+      sb.append(positionToApiString(pos));
+      sb.append(",");
+      sb.append(RemoteSession.blockFaceToNotch(face));
+      sb.append(",");
+      sb.append(entity.getID());
+      return sb.toString();
+    }
   }
 }

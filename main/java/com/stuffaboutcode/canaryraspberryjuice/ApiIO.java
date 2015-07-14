@@ -1,6 +1,7 @@
 package com.stuffaboutcode.canaryraspberryjuice;
 
 import com.google.common.base.Joiner;
+import com.stuffaboutcode.canaryraspberryjuice.apis.OriginalApi;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +71,17 @@ public class ApiIO {
       List<String> strings = new ArrayList<String>();
       for (Player p: players) {
         strings.add(serializeResult(p));
+      }
+      return Joiner.on("|").join(strings);
+
+    } else if (objectResult instanceof OriginalApi.BlockEvent) {
+      return ((OriginalApi.BlockEvent)objectResult).toApiResult();
+
+    } else if (objectResult instanceof OriginalApi.BlockEvent[]) {
+      OriginalApi.BlockEvent[] blockEvents = (OriginalApi.BlockEvent[])objectResult;
+      List<String> strings = new ArrayList<String>();
+      for (OriginalApi.BlockEvent blockEvent: blockEvents) {
+        strings.add(serializeResult(blockEvent));
       }
       return Joiner.on("|").join(strings);
 
