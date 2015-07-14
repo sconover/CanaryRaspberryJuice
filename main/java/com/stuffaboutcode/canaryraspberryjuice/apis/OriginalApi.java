@@ -122,6 +122,7 @@ public class OriginalApi {
 
   @RPC("player.getTile")
   public Position player_getTile() {
+    //TODO: what do we do here if there's no player logged in?
     return player_getTile(serverWrapper.getFirstPlayer().getName());
   }
 

@@ -64,7 +64,6 @@ public class CanaryRaspberryJuiceListener implements PluginListener {
 		if (itemHeld != null) {
 			// is the player holding a sword
 			if (blockHitDetectionTools.contains(itemHeld.getId())) {
-				System.out.println("block hit!");
 				// add the hook event to each session, the session can then decide what to do with it
 				for (RemoteSession session: remoteSessionsHolder.get()) {
 					session.queueBlockHit(hitHook);

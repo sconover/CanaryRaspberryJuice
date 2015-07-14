@@ -12,6 +12,7 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -40,6 +41,10 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
 public class TestCanaryModServer {
+
+  //TODO: there's a lot of weird stuff happening in here so this needs to be extensively commented,
+  // especially regarding motivation
+
   public static void main(String[] args) {
     try {
       if (!new File(System.getProperty("user.dir")).getName().equals("server-root")) {
@@ -153,13 +158,13 @@ public class TestCanaryModServer {
   }
 
   public static class AutoReloadingPluginLifecycle extends PluginLifecycleBase {
-    private Thread watchThread;
+    private List<Thread> watchThreads;
     private ClassLoader ploader;
 
     public AutoReloadingPluginLifecycle(PluginDescriptor desc) {
       super(desc);
 
-      this.watchThread = null;
+      this.watchThreads = new ArrayList<>();
     }
 
     @Override protected void _load() throws PluginLoadFailedException {
@@ -178,14 +183,15 @@ public class TestCanaryModServer {
         throw new PluginLoadFailedException("Failed to load plugin", thrown);
       }
 
-      watchThread = new Thread(new Runnable() {
+      Thread t = new Thread(new Runnable() {
         @Override public void run() {
           try {
             String parentDir = desc.getPath();
-            List<String> subDirParts = Arrays.asList(desc.getCanaryInf().getString("main-class").split("\\."));
+            List<String> subDirParts =
+                Arrays.asList(desc.getCanaryInf().getString("main-class").split("\\."));
             String subDir =
                 subDirParts
-                    .subList(0, subDirParts.size()-1)
+                    .subList(0, subDirParts.size() - 1)
                     .stream()
                     .collect(Collectors.joining("/"));
             Path path = new File(parentDir, subDir).toPath();
@@ -196,9 +202,10 @@ public class TestCanaryModServer {
             // see http://stackoverflow.com/questions/9588737/is-java-7-watchservice-slow-for-anyone-else
             Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
               @Override
-              public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+              public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                  throws IOException {
                 dir.register(watchService,
-                    new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_MODIFY},
+                    new WatchEvent.Kind[] {ENTRY_CREATE, ENTRY_MODIFY},
                     SensitivityWatchEventModifier.HIGH);
                 return FileVisitResult.CONTINUE;
               }
@@ -224,12 +231,15 @@ public class TestCanaryModServer {
           }
         }
       });
-      watchThread.start();
+      watchThreads.add(t);
+      t.start();
     }
 
     @Override protected void _unload() {
-      if (watchThread != null && watchThread.isAlive()) {
-        watchThread.interrupt();
+      for (Thread t: watchThreads) {
+        if (t.isAlive()) {
+          t.interrupt();
+        }
       }
       ploader = null;
     }
