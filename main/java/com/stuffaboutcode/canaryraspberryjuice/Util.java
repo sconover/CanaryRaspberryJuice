@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import net.canarymod.api.world.World;
 import net.canarymod.api.world.position.Position;
+import net.canarymod.api.world.position.Vector3D;
 
 public class Util {
   public static Position positionRelativeTo(Position p, Position relativeTo) {
@@ -12,6 +13,10 @@ public class Util {
         (int)p.getX() - (int)relativeTo.getX(),
         (int)p.getY() - (int)relativeTo.getY(),
         (int)p.getZ() - (int)relativeTo.getZ());
+  }
+
+  public static String vectorToApiString(Vector3D v) {
+    return String.format("%f,%f,%f", v.getX(), v.getY(), v.getZ());
   }
 
   public static String positionToApiString(Position p) {
@@ -64,5 +69,17 @@ public class Util {
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
+  }
+
+  // creates a unit vector from rotation and pitch
+  // origin is https://github.com/Bukkit/Bukkit/blob/master/src/main/java/org/bukkit/Location.java
+  // "setDirection"
+  public static Vector3D calculateDirection(float pitch, float rotation) {
+    double rotationRad = Math.toRadians(rotation);
+    double pitchRad = Math.toRadians(pitch);
+    double x = (Math.sin(rotationRad) * Math.cos(pitchRad)) * -1;
+    double y = Math.sin(pitchRad) * -1;
+    double z = Math.cos(rotationRad) * Math.cos(pitchRad);
+    return new Vector3D(x, y, z);
   }
 }

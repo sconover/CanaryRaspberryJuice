@@ -8,7 +8,11 @@ import java.util.List;
 import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Position;
+import net.canarymod.api.world.position.Vector3D;
 import org.apache.commons.lang3.tuple.Pair;
+
+import static com.stuffaboutcode.canaryraspberryjuice.Util.positionToApiString;
+import static com.stuffaboutcode.canaryraspberryjuice.Util.vectorToApiString;
 
 public class ApiIO {
   public static Object[] convertArguments(String[] args, Method m) {
@@ -91,8 +95,11 @@ public class ApiIO {
     } else if (objectResult instanceof OriginalApi.BlockPosition) {
       return ((OriginalApi.BlockPosition) objectResult).toApiResult();
 
+    } else if (objectResult instanceof Vector3D) {
+      return vectorToApiString((Vector3D) objectResult);
+
     } else if (objectResult instanceof Position) {
-      return Util.positionToApiString((Position) objectResult);
+      return positionToApiString((Position) objectResult);
 
     }
     throw new RuntimeException(String.format(

@@ -120,17 +120,7 @@ public class CommandHandler {
       // get the world
       World world = getWorld();
 
-      if (c.equals("player.getDirection")) {
-        String name = null;
-        if (args.length > 0) {
-          name = args[0];
-        }
-        Player currentPlayer = getCurrentPlayer(name);
-        Vector3D direction = getDirection(currentPlayer);
-        send(direction.getX() + "," + direction.getY() + "," + direction.getZ());
-
-        // player.getRotation
-      } else if (c.equals("player.getRotation")) {
+      if (c.equals("player.getRotation")) {
         String name = null;
         if (args.length > 0) {
           name = args[0];

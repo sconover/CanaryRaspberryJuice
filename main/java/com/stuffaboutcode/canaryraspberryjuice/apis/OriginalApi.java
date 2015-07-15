@@ -15,11 +15,13 @@ import net.canarymod.api.world.blocks.BlockFace;
 import net.canarymod.api.world.blocks.BlockType;
 import net.canarymod.api.world.position.Location;
 import net.canarymod.api.world.position.Position;
+import net.canarymod.api.world.position.Vector3D;
 import net.canarymod.hook.player.BlockRightClickHook;
 import net.canarymod.logger.Logman;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import static com.stuffaboutcode.canaryraspberryjuice.Util.calculateDirection;
 import static com.stuffaboutcode.canaryraspberryjuice.Util.positionRelativeTo;
 
 public class OriginalApi {
@@ -167,6 +169,20 @@ public class OriginalApi {
     teleportPlayerTo(player, relativeX, relativeY, relativeZ);
   }
 
+  // TODO: all of these need javadoc
+
+  @RPC("player.getDirection")
+  public Vector3D player_getDirection() {
+    //TODO: what do we do here if there's no player logged in?
+    return player_getDirection(serverWrapper.getFirstPlayer().getName());
+  }
+
+  @RPC("player.getDirection")
+  public Vector3D player_getDirection(String playerName) {
+    Player player = serverWrapper.getPlayerByName(playerName);
+    return calculateDirection(player.getPitch(), player.getRotation());
+  }
+
   private void teleportPlayerTo(
       Player player,
       double relativeX, double relativeY, double relativeZ) {
@@ -182,21 +198,6 @@ public class OriginalApi {
     newLocation.setRotation(player.getRotation());
     player.teleportTo(newLocation);
   }
-
-  //if (c.equals("player.setPos")) {
-  //  String name = null, x = args[0], y = args[1], z = args[2];
-  //  if (args.length > 3) {
-  //    name = args[0];
-  //    x = args[1];
-  //    y = args[2];
-  //    z = args[3];
-  //  }
-  //  Player currentPlayer = getCurrentPlayer(name);
-  //  //get players current location, so when they are moved we will use the same pitch and yaw (rotation)
-  //  Location loc = currentPlayer.getLocation();
-  //  currentPlayer.teleportTo(
-  //      parseRelativeLocation(x, y, z, loc.getPitch(), loc.getRotation()));
-  //
 
   public static class BlockEvent {
     public static BlockEvent fromBlockRightClock(
