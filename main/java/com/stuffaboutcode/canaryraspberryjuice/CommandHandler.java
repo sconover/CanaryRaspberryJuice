@@ -120,12 +120,7 @@ public class CommandHandler {
       // get the world
       World world = getWorld();
 
-      if (c.equals("world.getHeight")) {
-        Location loc = parseRelativeBlockLocation(origin, args[0], "0", args[1]);
-        send(world.getHighestBlockAt(loc.getBlockX(), loc.getBlockZ()) - origin.getBlockY());
-
-        // entity.getTile
-      } else if (c.equals("entity.getTile")) {
+      if (c.equals("entity.getTile")) {
         //get entity based on id
         //EntityLiving entity = getEntityLiving(Integer.parseInt(args[0]));
         Player entity = getEntity(Integer.parseInt(args[0]));

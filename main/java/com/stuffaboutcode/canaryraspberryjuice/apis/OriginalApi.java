@@ -98,6 +98,14 @@ public class OriginalApi {
     return allPlayers.toArray(new Player[allPlayers.size()]);
   }
 
+  @RPC("world.getHeight")
+  public int world_getHeight(int x, int z) {
+    int relativeX = origin.getBlockX() + x;
+    int relativeZ = origin.getBlockZ() + z;
+    int absoluteHeight = serverWrapper.getWorld().getHighestBlockAt(relativeX, relativeZ);
+    return absoluteHeight - origin.getBlockY();
+  }
+
   @RPC("chat.post")
   public void chat_post(@RawArgString String chatStr) {
     serverWrapper.broadcastMessage(chatStr);
@@ -184,25 +192,25 @@ public class OriginalApi {
   }
 
   @RPC("player.getPitch")
-  public Float player_getPitch() {
+  public float player_getPitch() {
     //TODO: what do we do here if there's no player logged in?
     return player_getPitch(serverWrapper.getFirstPlayer().getName());
   }
 
   @RPC("player.getPitch")
-  public Float player_getPitch(String playerName) {
+  public float player_getPitch(String playerName) {
     Player player = serverWrapper.getPlayerByName(playerName);
     return player.getPitch();
   }
 
   @RPC("player.getRotation")
-  public Float player_getRotation() {
+  public float player_getRotation() {
     //TODO: what do we do here if there's no player logged in?
     return player_getRotation(serverWrapper.getFirstPlayer().getName());
   }
 
   @RPC("player.getRotation")
-  public Float player_getRotation(String playerName) {
+  public float player_getRotation(String playerName) {
     Player player = serverWrapper.getPlayerByName(playerName);
     return player.getRotation();
   }

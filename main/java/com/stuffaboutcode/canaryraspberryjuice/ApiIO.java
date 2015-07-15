@@ -104,6 +104,9 @@ public class ApiIO {
     } else if (objectResult instanceof Float) {
       return String.format("%f", (Float)objectResult);
 
+    } else if (objectResult instanceof Integer) {
+      return String.format("%d", (Integer)objectResult);
+
     }
     throw new RuntimeException(String.format(
         "not sure how to serialize %s %s",
