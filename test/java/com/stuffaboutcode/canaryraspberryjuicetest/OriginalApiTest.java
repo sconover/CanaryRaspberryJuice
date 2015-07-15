@@ -505,8 +505,6 @@ public class OriginalApiTest extends InWorldTestSupport {
   public void test_player_getDirection() throws Exception {
     if (getServerWrapper().hasPlayers()) {
 
-      Position p = nextTestPosition("player.getDirection");
-
       getServerWrapper().getFirstPlayer().setPitch(47f);
       getServerWrapper().getFirstPlayer().setRotation(97f);
 
@@ -538,6 +536,46 @@ public class OriginalApiTest extends InWorldTestSupport {
       pitchAndRotation = vectorToPitchAndRotation(vecX, vecY, vecZ);
       assertEquals(47, (int)pitchAndRotation.pitch);
       assertEquals(97, (int)pitchAndRotation.rotation);
+    }
+  }
+
+  @Test
+  public void test_player_getPitch() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+      getServerWrapper().getFirstPlayer().setPitch(49f);
+
+      getCommandHandler().handleLine(
+          String.format("player.getPitch(%s)", getServerWrapper().getFirstPlayer().getName()));
+
+      assertEquals(1, getTestOut().sends.size());
+      assertEquals(49, (int)Float.parseFloat(getTestOut().sends.get(0)));
+
+      // when player name is blank, default to first player
+
+      getCommandHandler().handleLine("player.getPitch()");
+
+      assertEquals(2, getTestOut().sends.size());
+      assertEquals(49, (int)Float.parseFloat(getTestOut().sends.get(1)));
+    }
+  }
+
+  @Test
+  public void test_player_getRotation() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+      getServerWrapper().getFirstPlayer().setRotation(93f);
+
+      getCommandHandler().handleLine(
+          String.format("player.getRotation(%s)", getServerWrapper().getFirstPlayer().getName()));
+
+      assertEquals(1, getTestOut().sends.size());
+      assertEquals(93, (int)Float.parseFloat(getTestOut().sends.get(0)));
+
+      // when player name is blank, default to first player
+
+      getCommandHandler().handleLine("player.getRotation()");
+
+      assertEquals(2, getTestOut().sends.size());
+      assertEquals(93, (int)Float.parseFloat(getTestOut().sends.get(1)));
     }
   }
 
