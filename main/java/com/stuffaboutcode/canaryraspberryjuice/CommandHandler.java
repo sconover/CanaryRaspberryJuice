@@ -120,22 +120,7 @@ public class CommandHandler {
       // get the world
       World world = getWorld();
 
-      if (c.equals("player.setPos")) {
-        String name = null, x = args[0], y = args[1], z = args[2];
-        if (args.length > 3) {
-          name = args[0];
-          x = args[1];
-          y = args[2];
-          z = args[3];
-        }
-        Player currentPlayer = getCurrentPlayer(name);
-        //get players current location, so when they are moved we will use the same pitch and yaw (rotation)
-        Location loc = currentPlayer.getLocation();
-        currentPlayer.teleportTo(
-            parseRelativeLocation(x, y, z, loc.getPitch(), loc.getRotation()));
-
-        // player.getDirection
-      } else if (c.equals("player.getDirection")) {
+      if (c.equals("player.getDirection")) {
         String name = null;
         if (args.length > 0) {
           name = args[0];

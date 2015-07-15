@@ -31,6 +31,9 @@ public class ApiIO {
     } else if (parameterType.equals(short.class)) {
       // TODO: validate the string
       return Short.parseShort(arg);
+    } else if (parameterType.equals(float.class)) {
+      // TODO: validate the string
+      return Float.parseFloat(arg);
     }
     throw new RuntimeException(String.format(
         "not sure how to convert arg %s to %s", arg, parameterType.getName()));

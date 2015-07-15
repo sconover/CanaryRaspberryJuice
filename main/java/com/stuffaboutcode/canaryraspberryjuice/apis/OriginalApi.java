@@ -141,17 +141,7 @@ public class OriginalApi {
   @RPC("player.setTile")
   public void player_setTile(String playerName, int relativeX, int relativeY, int relativeZ) {
     Player player = serverWrapper.getPlayerByName(playerName);
-    Position newPosition =
-        new Position(
-            origin.getBlockX() + relativeX,
-            origin.getBlockY() + relativeY,
-            origin.getBlockZ() + relativeZ);
-
-    // maintain existing player pitch/yaw
-    Location newLocation = new Location(serverWrapper.getWorld(), newPosition);
-    newLocation.setPitch(player.getPitch());
-    newLocation.setRotation(player.getRotation());
-    player.teleportTo(newLocation);
+    teleportPlayerTo(player, relativeX, relativeY, relativeZ);
   }
 
   @RPC("player.getPos")
@@ -165,6 +155,48 @@ public class OriginalApi {
     Player player = serverWrapper.getPlayerByName(playerName);
     return positionRelativeTo(player.getLocation(), origin);
   }
+
+  @RPC("player.setPos")
+  public void player_setPos(float relativeX, float relativeY, float relativeZ) {
+    player_setPos(serverWrapper.getFirstPlayer().getName(), relativeX, relativeY, relativeZ);
+  }
+
+  @RPC("player.setPos")
+  public void player_setPos(String playerName, float relativeX, float relativeY, float relativeZ) {
+    Player player = serverWrapper.getPlayerByName(playerName);
+    teleportPlayerTo(player, relativeX, relativeY, relativeZ);
+  }
+
+  private void teleportPlayerTo(
+      Player player,
+      double relativeX, double relativeY, double relativeZ) {
+    Position newPosition =
+        new Position(
+            origin.getX() + relativeX,
+            origin.getY() + relativeY,
+            origin.getZ() + relativeZ);
+
+    // maintain existing player pitch/yaw
+    Location newLocation = new Location(serverWrapper.getWorld(), newPosition);
+    newLocation.setPitch(player.getPitch());
+    newLocation.setRotation(player.getRotation());
+    player.teleportTo(newLocation);
+  }
+
+  //if (c.equals("player.setPos")) {
+  //  String name = null, x = args[0], y = args[1], z = args[2];
+  //  if (args.length > 3) {
+  //    name = args[0];
+  //    x = args[1];
+  //    y = args[2];
+  //    z = args[3];
+  //  }
+  //  Player currentPlayer = getCurrentPlayer(name);
+  //  //get players current location, so when they are moved we will use the same pitch and yaw (rotation)
+  //  Location loc = currentPlayer.getLocation();
+  //  currentPlayer.teleportTo(
+  //      parseRelativeLocation(x, y, z, loc.getPitch(), loc.getRotation()));
+  //
 
   public static class BlockEvent {
     public static BlockEvent fromBlockRightClock(
