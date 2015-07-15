@@ -727,9 +727,9 @@ public class OriginalApiTest extends InWorldTestSupport {
 
       assertEquals(
           new Position(
-              p.getX() + 5.2d,
-              p.getY() + 5.2d,
-              p.getZ() + 5.2d),
+              p.getX() + 5.2f,
+              p.getY() + 5.2f,
+              p.getZ() + 5.2f),
           getServerWrapper().getFirstPlayer().getPosition());
 
       // make sure the pitch and yaw are maintained

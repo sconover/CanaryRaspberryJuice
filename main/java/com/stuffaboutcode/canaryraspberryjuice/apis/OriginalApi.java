@@ -137,8 +137,7 @@ public class OriginalApi {
 
   @RPC("player.getTile")
   public BlockPosition player_getTile(String playerName) {
-    Player player = serverWrapper.getPlayerByName(playerName);
-    return BlockPosition.fromPosition(positionRelativeTo(player.getLocation(), origin));
+    return getEntityTile(serverWrapper.getPlayerByName(playerName));
   }
 
   @RPC("player.setTile")
@@ -150,8 +149,7 @@ public class OriginalApi {
 
   @RPC("player.setTile")
   public void player_setTile(String playerName, int relativeX, int relativeY, int relativeZ) {
-    Player player = serverWrapper.getPlayerByName(playerName);
-    teleportPlayerTo(player, relativeX, relativeY, relativeZ);
+    teleportEntityTo(serverWrapper.getPlayerByName(playerName), relativeX, relativeY, relativeZ);
   }
 
   @RPC("player.getPos")
@@ -162,8 +160,7 @@ public class OriginalApi {
 
   @RPC("player.getPos")
   public Position player_getPos(String playerName) {
-    Player player = serverWrapper.getPlayerByName(playerName);
-    return positionRelativeTo(player.getLocation(), origin);
+    return getEntityPosition(serverWrapper.getPlayerByName(playerName));
   }
 
   @RPC("player.setPos")
@@ -173,8 +170,7 @@ public class OriginalApi {
 
   @RPC("player.setPos")
   public void player_setPos(String playerName, float relativeX, float relativeY, float relativeZ) {
-    Player player = serverWrapper.getPlayerByName(playerName);
-    teleportPlayerTo(player, relativeX, relativeY, relativeZ);
+    teleportEntityTo(serverWrapper.getPlayerByName(playerName), relativeX, relativeY, relativeZ);
   }
 
   // TODO: all of these need javadoc
@@ -187,8 +183,7 @@ public class OriginalApi {
 
   @RPC("player.getDirection")
   public Vector3D player_getDirection(String playerName) {
-    Player player = serverWrapper.getPlayerByName(playerName);
-    return calculateDirection(player.getPitch(), player.getRotation());
+    return getEntityDirection(serverWrapper.getPlayerByName(playerName));
   }
 
   @RPC("player.getPitch")
@@ -199,8 +194,7 @@ public class OriginalApi {
 
   @RPC("player.getPitch")
   public float player_getPitch(String playerName) {
-    Player player = serverWrapper.getPlayerByName(playerName);
-    return player.getPitch();
+    return serverWrapper.getPlayerByName(playerName).getPitch();
   }
 
   @RPC("player.getRotation")
@@ -211,12 +205,61 @@ public class OriginalApi {
 
   @RPC("player.getRotation")
   public float player_getRotation(String playerName) {
-    Player player = serverWrapper.getPlayerByName(playerName);
-    return player.getRotation();
+    return serverWrapper.getPlayerByName(playerName).getRotation();
   }
 
-  private void teleportPlayerTo(
-      Player player,
+
+
+  @RPC("entity.getTile")
+  public BlockPosition entity_getTile(int entityId) {
+    return getEntityTile(serverWrapper.getEntityById(entityId));
+  }
+
+  @RPC("entity.setTile")
+  public void entity_setTile(int entityId, int relativeX, int relativeY, int relativeZ) {
+    teleportEntityTo(serverWrapper.getEntityById(entityId), relativeX, relativeY, relativeZ);
+  }
+
+  @RPC("entity.getPos")
+  public Position entity_getPos(int entityId) {
+    return getEntityPosition(serverWrapper.getEntityById(entityId));
+  }
+
+  @RPC("entity.setPos")
+  public void entity_setPos(int entityId, float relativeX, float relativeY, float relativeZ) {
+    teleportEntityTo(serverWrapper.getEntityById(entityId), relativeX, relativeY, relativeZ);
+  }
+
+  @RPC("entity.getDirection")
+  public Vector3D entity_getDirection(int entityId) {
+    return getEntityDirection(serverWrapper.getEntityById(entityId));
+  }
+
+  @RPC("entity.getPitch")
+  public float entity_getPitch(int entityId) {
+    return serverWrapper.getEntityById(entityId).getPitch();
+  }
+
+  @RPC("entity.getRotation")
+  public float entity_getRotation(int entityId) {
+    return serverWrapper.getEntityById(entityId).getRotation();
+  }
+
+
+  private Vector3D getEntityDirection(Entity entity) {
+    return calculateDirection(entity.getPitch(), entity.getRotation());
+  }
+
+  private Position getEntityPosition(Entity entity) {
+    return positionRelativeTo(entity.getLocation(), origin);
+  }
+
+  private BlockPosition getEntityTile(Entity entity) {
+    return BlockPosition.fromPosition(positionRelativeTo(entity.getLocation(), origin));
+  }
+
+  private void teleportEntityTo(
+      Entity entity,
       double relativeX, double relativeY, double relativeZ) {
     Position newPosition =
         new Position(
@@ -224,11 +267,11 @@ public class OriginalApi {
             origin.getY() + relativeY,
             origin.getZ() + relativeZ);
 
-    // maintain existing player pitch/yaw
+    // maintain existing entity pitch/yaw
     Location newLocation = new Location(serverWrapper.getWorld(), newPosition);
-    newLocation.setPitch(player.getPitch());
-    newLocation.setRotation(player.getRotation());
-    player.teleportTo(newLocation);
+    newLocation.setPitch(entity.getPitch());
+    newLocation.setRotation(entity.getRotation());
+    entity.teleportTo(newLocation);
   }
 
   public static class BlockEvent {
