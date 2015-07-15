@@ -500,4 +500,84 @@ public class OriginalApiTest extends InWorldTestSupport {
           getServerWrapper().getFirstPlayer().getPosition());
     }
   }
+
+  @Test
+  public void test_player_getDirection() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+
+      Position p = nextTestPosition("player.getDirection");
+
+      getServerWrapper().getFirstPlayer().setPitch(47f);
+      getServerWrapper().getFirstPlayer().setRotation(97f);
+
+      getCommandHandler().handleLine(
+          String.format("player.getDirection(%s)", getServerWrapper().getFirstPlayer().getName()));
+
+      assertEquals(1, getTestOut().sends.size());
+
+      String[] parts = getTestOut().sends.get(0).split(",", 3);
+      double vecX = Double.parseDouble(parts[0]);
+      double vecY = Double.parseDouble(parts[1]);
+      double vecZ = Double.parseDouble(parts[2]);
+
+      PitchAndRotation pitchAndRotation = vectorToPitchAndRotation(vecX, vecY, vecZ);
+      assertEquals(47, (int)pitchAndRotation.pitch);
+      assertEquals(97, (int)pitchAndRotation.rotation);
+
+      // when player name is blank, default to first player
+
+      getCommandHandler().handleLine("player.getDirection()");
+
+      assertEquals(2, getTestOut().sends.size());
+
+      parts = getTestOut().sends.get(1).split(",", 3);
+      vecX = Double.parseDouble(parts[0]);
+      vecY = Double.parseDouble(parts[1]);
+      vecZ = Double.parseDouble(parts[2]);
+
+      pitchAndRotation = vectorToPitchAndRotation(vecX, vecY, vecZ);
+      assertEquals(47, (int)pitchAndRotation.pitch);
+      assertEquals(97, (int)pitchAndRotation.rotation);
+    }
+  }
+
+
+  static class PitchAndRotation {
+    public final double pitch;
+    public final double rotation;
+
+    public PitchAndRotation(double pitch, double rotation) {
+      this.pitch = pitch;
+      this.rotation = rotation;
+    }
+  }
+
+  // taken from https://github.com/Bukkit/Bukkit/blob/master/src/main/java/org/bukkit/Location.java
+  // "setDirection"
+  public PitchAndRotation vectorToPitchAndRotation(double vecX, double vecY, double vecZ) {
+        /*
+         * Sin = Opp / Hyp
+         * Cos = Adj / Hyp
+         * Tan = Opp / Adj
+         *
+         * x = -Opp
+         * z = Adj
+         */
+    final double _2PI = 2 * Math.PI;
+
+    if (vecX == 0 && vecZ == 0) {
+      double pitch = vecY > 0 ? -90 : 90;
+      return new PitchAndRotation(pitch, 0);
+    }
+
+    double theta = Math.atan2(-vecX, vecZ);
+    double yaw = (float) Math.toDegrees((theta + _2PI) % _2PI);
+
+    double x2 = vecX * vecX;
+    double z2 = vecZ * vecZ;
+    double xz = Math.sqrt(x2 + z2);
+    double pitch = (float) Math.toDegrees(Math.atan(-vecY / xz));
+
+    return new PitchAndRotation(pitch, yaw);
+  }
 }
