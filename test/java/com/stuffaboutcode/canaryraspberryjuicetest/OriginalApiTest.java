@@ -233,11 +233,40 @@ public class OriginalApiTest extends InWorldTestSupport {
     }
   }
 
-  //[09:14] <svdragster> Are you trying to force a player to select a certain slot, or are you trying to put an item in the players hand?
-  //    [09:25] <Guest32326> put an item in a player's hand
-  //    [09:55] <svdragster> then do and do inventory.setSlot(getSelectedHotbarSlotId(), item)
-  //    [09:55] <svdragster> Guest32326
-  //[09:56] <svdragster> you might have to set the item to '(Item) null' first
+  @Test
+  public void test_world_getHeight() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+      Position p = nextTestPosition("world.getHeight");
+
+      // make the origin == p
+
+      setUpAtPlayerOrigin(p);
+
+      Block block =
+          getServerWrapper().getWorld().getBlockAt(
+              p.getBlockX() + 3,
+              p.getBlockY() + 5,
+              p.getBlockZ() + 7);
+      block.setType(BlockType.RedstoneBlock);
+      block.update();
+
+      // sanity check of height
+      assertEquals(
+          p.getBlockY() + 6, // height of block y, + 1
+          getServerWrapper().getWorld().getHighestBlockAt(p.getBlockX() + 3, p.getBlockZ() + 7));
+
+      // x and z are relative to the origin
+      getCommandHandler().handleLine("world.getHeight(3,7)");
+
+      // the first block before there's just air, at this x,z location,
+      // relative to the player's origin
+      int expectedWorldHeight = 6;
+
+      assertEquals(
+          Lists.newArrayList(String.valueOf(expectedWorldHeight)),
+          getTestOut().sends);
+    }
+  }
 
   @Test
   public void test_events_block_hits() throws Exception {
@@ -376,7 +405,6 @@ public class OriginalApiTest extends InWorldTestSupport {
               (int) p.getZ() + PLAYER_PLACEMENT_Z_OFFSET),
           getServerWrapper().getFirstPlayer().getPosition());
 
-
       // move the player diagonally
 
       getCommandHandler().handleLine(
@@ -391,8 +419,8 @@ public class OriginalApiTest extends InWorldTestSupport {
 
       // make sure the pitch and yaw are maintained
 
-      assertEquals(-74, (int)getServerWrapper().getFirstPlayer().getPitch());
-      assertEquals(89, (int)getServerWrapper().getFirstPlayer().getRotation());
+      assertEquals(-74, (int) getServerWrapper().getFirstPlayer().getPitch());
+      assertEquals(89, (int) getServerWrapper().getFirstPlayer().getRotation());
 
       // when player name is blank, default to first player
 
@@ -470,11 +498,11 @@ public class OriginalApiTest extends InWorldTestSupport {
               p.getZ() + (double) PLAYER_PLACEMENT_Z_OFFSET),
           getServerWrapper().getFirstPlayer().getPosition());
 
-
       // move the player diagonally
 
       getCommandHandler().handleLine(
-          String.format("player.setPos(%s,5.2,5.2,5.2)", getServerWrapper().getFirstPlayer().getName()));
+          String.format("player.setPos(%s,5.2,5.2,5.2)",
+              getServerWrapper().getFirstPlayer().getName()));
 
       assertEquals(
           new Position(
@@ -485,8 +513,8 @@ public class OriginalApiTest extends InWorldTestSupport {
 
       // make sure the pitch and yaw are maintained
 
-      assertEquals(-74, (int)getServerWrapper().getFirstPlayer().getPitch());
-      assertEquals(89, (int)getServerWrapper().getFirstPlayer().getRotation());
+      assertEquals(-74, (int) getServerWrapper().getFirstPlayer().getPitch());
+      assertEquals(89, (int) getServerWrapper().getFirstPlayer().getRotation());
 
       // when player name is blank, default to first player
 
@@ -519,8 +547,8 @@ public class OriginalApiTest extends InWorldTestSupport {
       double vecZ = Double.parseDouble(parts[2]);
 
       PitchAndRotation pitchAndRotation = vectorToPitchAndRotation(vecX, vecY, vecZ);
-      assertEquals(47, (int)pitchAndRotation.pitch);
-      assertEquals(97, (int)pitchAndRotation.rotation);
+      assertEquals(47, (int) pitchAndRotation.pitch);
+      assertEquals(97, (int) pitchAndRotation.rotation);
 
       // when player name is blank, default to first player
 
@@ -534,8 +562,8 @@ public class OriginalApiTest extends InWorldTestSupport {
       vecZ = Double.parseDouble(parts[2]);
 
       pitchAndRotation = vectorToPitchAndRotation(vecX, vecY, vecZ);
-      assertEquals(47, (int)pitchAndRotation.pitch);
-      assertEquals(97, (int)pitchAndRotation.rotation);
+      assertEquals(47, (int) pitchAndRotation.pitch);
+      assertEquals(97, (int) pitchAndRotation.rotation);
     }
   }
 
@@ -548,14 +576,14 @@ public class OriginalApiTest extends InWorldTestSupport {
           String.format("player.getPitch(%s)", getServerWrapper().getFirstPlayer().getName()));
 
       assertEquals(1, getTestOut().sends.size());
-      assertEquals(49, (int)Float.parseFloat(getTestOut().sends.get(0)));
+      assertEquals(49, (int) Float.parseFloat(getTestOut().sends.get(0)));
 
       // when player name is blank, default to first player
 
       getCommandHandler().handleLine("player.getPitch()");
 
       assertEquals(2, getTestOut().sends.size());
-      assertEquals(49, (int)Float.parseFloat(getTestOut().sends.get(1)));
+      assertEquals(49, (int) Float.parseFloat(getTestOut().sends.get(1)));
     }
   }
 
@@ -568,17 +596,16 @@ public class OriginalApiTest extends InWorldTestSupport {
           String.format("player.getRotation(%s)", getServerWrapper().getFirstPlayer().getName()));
 
       assertEquals(1, getTestOut().sends.size());
-      assertEquals(93, (int)Float.parseFloat(getTestOut().sends.get(0)));
+      assertEquals(93, (int) Float.parseFloat(getTestOut().sends.get(0)));
 
       // when player name is blank, default to first player
 
       getCommandHandler().handleLine("player.getRotation()");
 
       assertEquals(2, getTestOut().sends.size());
-      assertEquals(93, (int)Float.parseFloat(getTestOut().sends.get(1)));
+      assertEquals(93, (int) Float.parseFloat(getTestOut().sends.get(1)));
     }
   }
-
 
   static class PitchAndRotation {
     public final double pitch;
