@@ -16,59 +16,59 @@ import net.canarymod.plugin.PluginListener;
 //import net.canarymod.hook.player.ConnectionHook;
 
 public class CanaryRaspberryJuiceListener implements PluginListener {
-	
-	private final RemoteSessionsHolder remoteSessionsHolder;
-	
-	// Tools (swords) which can be used to hit blocks
-	public static final Set<Integer> blockHitDetectionTools = new HashSet<Integer>(Arrays.asList(
-			ItemType.DiamondSword.getId(),
-			ItemType.GoldSword.getId(), 
-			ItemType.IronSword.getId(), 
-			ItemType.StoneSword.getId(), 
-			ItemType.WoodSword.getId()));
-	
-	// Class constructor
-	public CanaryRaspberryJuiceListener(RemoteSessionsHolder remoteSessionsHolder) {
-		this.remoteSessionsHolder = remoteSessionsHolder;
-	}
+
+  private final RemoteSessionsHolder remoteSessionsHolder;
+
+  // Tools (swords) which can be used to hit blocks
+  public static final Set<Integer> blockHitDetectionTools = new HashSet<Integer>(Arrays.asList(
+      ItemType.DiamondSword.getId(),
+      ItemType.GoldSword.getId(),
+      ItemType.IronSword.getId(),
+      ItemType.StoneSword.getId(),
+      ItemType.WoodSword.getId()));
+
+  // Class constructor
+  public CanaryRaspberryJuiceListener(RemoteSessionsHolder remoteSessionsHolder) {
+    this.remoteSessionsHolder = remoteSessionsHolder;
+  }
     
 	/*@HookHandler
     public void onLogin(ConnectionHook hook) {
 		hook.getPlayer().message(Colors.YELLOW+"Hello " + hook.getPlayer().getName() + " Raspberry Juice is running");
     }*/
 
-	@HookHandler
-	public void onTick(ServerTickHook tickHook) {
-		//called each tick of the server it gets all the remote sessions to run
-		Iterator<RemoteSession> sI = remoteSessionsHolder.get().iterator();
-		while(sI.hasNext()) {
-			RemoteSession s = sI.next();
-			if (s.isPendingRemoval()) {
-				s.close();
-				sI.remove();
-			} else {
-				s.tick();
-			}
-		}
-	}
-	
-	@HookHandler
-	public void onBlockHit(BlockRightClickHook hitHook) {
-		//DEBUG
-		//plugin.getLogman().info("BlockRightHitHook fired");
-		//get the player
-		Player playerWhoHit = hitHook.getPlayer();
-		//get what the player is holding
-		Item itemHeld = playerWhoHit.getItemHeld();
-		//are they holding something!
-		if (itemHeld != null) {
-			// is the player holding a sword
-			if (blockHitDetectionTools.contains(itemHeld.getId())) {
-				// add the hook event to each session, the session can then decide what to do with it
-				for (RemoteSession session: remoteSessionsHolder.get()) {
-					session.queueBlockHit(hitHook);
-				}
-			}
-		}
-	}
+  @HookHandler
+  public void onTick(ServerTickHook tickHook) {
+    //called each tick of the server it gets all the remote sessions to run
+    Iterator<RemoteSession> sI = remoteSessionsHolder.get().iterator();
+    while (sI.hasNext()) {
+      RemoteSession s = sI.next();
+      if (s.isPendingRemoval()) {
+        s.close();
+        sI.remove();
+      } else {
+        s.tick();
+      }
+    }
+  }
+
+  @HookHandler
+  public void onBlockHit(BlockRightClickHook hitHook) {
+    //DEBUG
+    //plugin.getLogman().info("BlockRightHitHook fired");
+    //get the player
+    Player playerWhoHit = hitHook.getPlayer();
+    //get what the player is holding
+    Item itemHeld = playerWhoHit.getItemHeld();
+    //are they holding something!
+    if (itemHeld != null) {
+      // is the player holding a sword
+      if (blockHitDetectionTools.contains(itemHeld.getId())) {
+        // add the hook event to each session, the session can then decide what to do with it
+        for (RemoteSession session : remoteSessionsHolder.get()) {
+          session.queueBlockHit(hitHook);
+        }
+      }
+    }
+  }
 }

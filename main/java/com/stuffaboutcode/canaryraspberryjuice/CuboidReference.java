@@ -40,7 +40,7 @@ public class CuboidReference {
 
     Position start = new Position(minX, minY, minZ);
 
-    return new CuboidReference(start, maxX-minX+1, maxY-minY+1, maxZ-minZ+1);
+    return new CuboidReference(start, maxX - minX + 1, maxY - minY + 1, maxZ - minZ + 1);
   }
 
   private final Position start;

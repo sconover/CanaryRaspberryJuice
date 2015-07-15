@@ -208,8 +208,6 @@ public class OriginalApi {
     return serverWrapper.getPlayerByName(playerName).getRotation();
   }
 
-
-
   @RPC("entity.getTile")
   public BlockPosition entity_getTile(int entityId) {
     return getEntityTile(serverWrapper.getEntityById(entityId));
@@ -244,7 +242,6 @@ public class OriginalApi {
   public float entity_getRotation(int entityId) {
     return serverWrapper.getEntityById(entityId).getRotation();
   }
-
 
   private Vector3D getEntityDirection(Entity entity) {
     return calculateDirection(entity.getPitch(), entity.getRotation());

@@ -10,9 +10,9 @@ import net.canarymod.api.world.position.Vector3D;
 public class Util {
   public static Position positionRelativeTo(Position p, Position relativeTo) {
     return new Position(
-        (int)p.getX() - (int)relativeTo.getX(),
-        (int)p.getY() - (int)relativeTo.getY(),
-        (int)p.getZ() - (int)relativeTo.getZ());
+        (int) p.getX() - (int) relativeTo.getX(),
+        (int) p.getY() - (int) relativeTo.getY(),
+        (int) p.getZ() - (int) relativeTo.getZ());
   }
 
   public static String vectorToApiString(Vector3D v) {
@@ -31,9 +31,9 @@ public class Util {
       final World world,
       Position start, int xSize, int zSize) {
     final int chunkX1 = start.getBlockX() >> 4;
-    final int chunkX2 = (start.getBlockX() + xSize-1) >> 4;
+    final int chunkX2 = (start.getBlockX() + xSize - 1) >> 4;
     final int chunkZ1 = start.getBlockZ() >> 4;
-    final int chunkZ2 = (start.getBlockZ() + zSize-1) >> 4;
+    final int chunkZ2 = (start.getBlockZ() + zSize - 1) >> 4;
 
     waitForChunkToLoadWithTimeout(world, chunkX1, chunkZ1, 5, TimeUnit.SECONDS);
 

@@ -67,7 +67,7 @@ public class Cuboid implements Iterable<Relative<Block>> {
   }
 
   public Cuboid changeBlocksToType(BlockType newType) {
-    for (Relative<Block> relativeBlock: this) {
+    for (Relative<Block> relativeBlock : this) {
       relativeBlock.object.setType(newType);
       relativeBlock.object.update();
     }
@@ -85,7 +85,7 @@ public class Cuboid implements Iterable<Relative<Block>> {
 
   public List<Position> toPositions() {
     List<Position> positions = new ArrayList<Position>();
-    for (Relative<Block> relativeBlock: this) {
+    for (Relative<Block> relativeBlock : this) {
       positions.add(relativeBlock.object.getPosition());
     }
     return ImmutableList.copyOf(positions);

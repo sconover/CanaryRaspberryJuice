@@ -9,7 +9,7 @@ import net.canarymod.plugin.PluginListener;
 public class HelloPlugin extends Plugin {
   @Override public boolean enable() {
     getLogman().info("Enabling " + getName() + " Version " + getVersion());
-    getLogman().info("Authored by "+ getAuthor());
+    getLogman().info("Authored by " + getAuthor());
 
     Canary.hooks().registerListener(new Listener(), this);
 
