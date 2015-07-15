@@ -183,6 +183,30 @@ public class OriginalApi {
     return calculateDirection(player.getPitch(), player.getRotation());
   }
 
+  @RPC("player.getPitch")
+  public Float player_getPitch() {
+    //TODO: what do we do here if there's no player logged in?
+    return player_getPitch(serverWrapper.getFirstPlayer().getName());
+  }
+
+  @RPC("player.getPitch")
+  public Float player_getPitch(String playerName) {
+    Player player = serverWrapper.getPlayerByName(playerName);
+    return player.getPitch();
+  }
+
+  @RPC("player.getRotation")
+  public Float player_getRotation() {
+    //TODO: what do we do here if there's no player logged in?
+    return player_getRotation(serverWrapper.getFirstPlayer().getName());
+  }
+
+  @RPC("player.getRotation")
+  public Float player_getRotation(String playerName) {
+    Player player = serverWrapper.getPlayerByName(playerName);
+    return player.getRotation();
+  }
+
   private void teleportPlayerTo(
       Player player,
       double relativeX, double relativeY, double relativeZ) {

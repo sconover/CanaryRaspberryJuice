@@ -120,25 +120,27 @@ public class CommandHandler {
       // get the world
       World world = getWorld();
 
-      if (c.equals("player.getRotation")) {
-        String name = null;
-        if (args.length > 0) {
-          name = args[0];
-        }
-        Player currentPlayer = getCurrentPlayer(name);
-        send(currentPlayer.getLocation().getRotation());
+      //if (c.equals("player.getRotation")) {
+      //  String name = null;
+      //  if (args.length > 0) {
+      //    name = args[0];
+      //  }
+      //  Player currentPlayer = getCurrentPlayer(name);
+      //  send(currentPlayer.getLocation().getRotation());
+      //
+      //  // player.getPitch
+      //} else if (c.equals("player.getPitch")) {
+      //  String name = null;
+      //  if (args.length > 0) {
+      //    name = args[0];
+      //  }
+      //  Player currentPlayer = getCurrentPlayer(name);
+      //  send(currentPlayer.getLocation().getPitch());
+      //
+      //  // world.getHeight
+      //} else
 
-        // player.getPitch
-      } else if (c.equals("player.getPitch")) {
-        String name = null;
-        if (args.length > 0) {
-          name = args[0];
-        }
-        Player currentPlayer = getCurrentPlayer(name);
-        send(currentPlayer.getLocation().getPitch());
-
-        // world.getHeight
-      } else if (c.equals("world.getHeight")) {
+      if (c.equals("world.getHeight")) {
         Location loc = parseRelativeBlockLocation(origin, args[0], "0", args[1]);
         send(world.getHighestBlockAt(loc.getBlockX(), loc.getBlockZ()) - origin.getBlockY());
 
