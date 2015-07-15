@@ -22,6 +22,8 @@ import net.canarymod.api.world.position.Position;
 import net.canarymod.logger.Logman;
 import org.junit.Before;
 
+import static com.stuffaboutcode.canaryraspberryjuice.Util.makeSureChunksHaveBeenGenerated;
+
 /**
  * Intended to be extended by test classes. Provides convenience objects and methods
  * for use in in-world testing.
@@ -60,6 +62,9 @@ public abstract class InWorldTestSupport {
 
   public void setUpAtPlayerOrigin(Position position) throws IOException {
     serverWrapper = new ServerWrapper(Canary.getServer());
+
+    makeSureChunksHaveBeenGenerated(serverWrapper.getWorld(), position);
+
     serverWrapper.getWorld().setSpawnLocation(new Location(serverWrapper.getWorld(),
         position));
 

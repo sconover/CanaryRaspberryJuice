@@ -1,5 +1,22 @@
--
+wait on setBlock until chunk exists.
+  (+timeout?)
+if (world.checkChunksExist(j1,posY, l1,j1,posY, l1)) {
+    ...
+}
+http://www.minecraftforum.net/forums/mapping-and-modding/minecraft-mods/modification-development/1437849-getting-already-decorating-exception-when-using
 
+- make sure test defaults for mc server are good:
+  - creative mode
+  - generous logout time
+- great comments once tests are in place and code refactored
+
+
+thinking about class documentation
+  google docs
+  can i mail merge? (of course!)
+    http://webapps.stackexchange.com/questions/40067/how-do-i-mail-merge-from-google-spreadsheet-to-a-google-document
+	so, create a google spreadsheet with class info
+	...and generate the server from the same spreadsheet (just copy-paste into local file on server - tsv or something)
 
 - include guava in "main" pluing module...
   ...needs a pom.

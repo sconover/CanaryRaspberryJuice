@@ -5,6 +5,8 @@ import net.canarymod.api.world.World;
 import net.canarymod.api.world.blocks.Block;
 import net.canarymod.api.world.position.Position;
 
+import static com.stuffaboutcode.canaryraspberryjuice.Util.makeSureChunksHaveBeenGenerated;
+
 /**
  * A "potential" cuboid (collection of blocks) in a minecraft world.
  *
@@ -58,6 +60,12 @@ public class CuboidReference {
 
   public Cuboid fetchBlocks(World world) {
     //TODO real-world bounds checking
+
+    //TODO: consider wrapping world, with something that only exposes a minimal set of
+    // read and write methods, that make sure reads and writes are "safe"
+    // Make all code use this instead of World, directly.
+
+    makeSureChunksHaveBeenGenerated(world, start, xSize, zSize);
 
     Block corner = world.getBlockAt(start);
 
