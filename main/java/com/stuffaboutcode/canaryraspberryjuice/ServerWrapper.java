@@ -13,6 +13,7 @@ import net.canarymod.api.entity.vehicle.Boat;
 import net.canarymod.api.entity.vehicle.Minecart;
 import net.canarymod.api.entity.vehicle.Vehicle;
 import net.canarymod.api.world.World;
+import net.canarymod.api.world.position.Position;
 
 /**
  * Wrapper around a canary server. Provides convenience methods for accessing objects and
@@ -34,6 +35,10 @@ public class ServerWrapper {
 
   public World getWorld() {
     return firstWorld;
+  }
+
+  public Position getSpawnPosition() {
+    return getWorld().getSpawnLocation();
   }
 
   // get the host player, i.e. the first player on the server

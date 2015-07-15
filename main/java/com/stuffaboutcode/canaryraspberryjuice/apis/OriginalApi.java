@@ -26,13 +26,13 @@ import static com.stuffaboutcode.canaryraspberryjuice.Util.positionRelativeTo;
 
 public class OriginalApi {
   // origin is the spawn location on the world
-  private final Location origin;
+  private final Position origin;
   private final ServerWrapper serverWrapper;
   private final ArrayDeque<BlockRightClickHook> blockHitQueue;
   private final Logman logman;
 
   public OriginalApi(
-      Location origin,
+      Position origin,
       ServerWrapper serverWrapper,
       ArrayDeque<BlockRightClickHook> blockHitQueue,
       Logman logman) {

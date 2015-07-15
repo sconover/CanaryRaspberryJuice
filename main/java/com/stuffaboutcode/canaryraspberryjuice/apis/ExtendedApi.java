@@ -5,17 +5,16 @@ import com.stuffaboutcode.canaryraspberryjuice.RPC;
 import com.stuffaboutcode.canaryraspberryjuice.ServerWrapper;
 import net.canarymod.api.entity.living.humanoid.Player;
 import net.canarymod.api.world.blocks.BlockType;
-import net.canarymod.api.world.position.Location;
 import net.canarymod.api.world.position.Position;
 import net.canarymod.logger.Logman;
 
 public class ExtendedApi {
   // origin is the spawn location on the world
-  private final Location origin;
+  private final Position origin;
   private final ServerWrapper serverWrapper;
   private final Logman logman;
 
-  public ExtendedApi(Location origin, ServerWrapper serverWrapper, Logman logman) {
+  public ExtendedApi(Position origin, ServerWrapper serverWrapper, Logman logman) {
     this.origin = origin;
     this.serverWrapper = serverWrapper;
     this.logman = logman;

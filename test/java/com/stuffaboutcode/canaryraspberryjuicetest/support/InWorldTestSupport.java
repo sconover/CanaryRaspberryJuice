@@ -72,7 +72,6 @@ public abstract class InWorldTestSupport {
     Logman logman = Logman.getLogman("Test-logman");
 
     commandHandler = new CommandHandler(
-        Canary.getServer(),
         new ServerWrapper(Canary.getServer()),
         logman,
         testOut);

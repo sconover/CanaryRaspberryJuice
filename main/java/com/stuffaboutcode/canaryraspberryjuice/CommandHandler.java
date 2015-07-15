@@ -5,32 +5,20 @@ import com.stuffaboutcode.canaryraspberryjuice.apis.OriginalApi;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import net.canarymod.api.Server;
-import net.canarymod.api.entity.living.humanoid.Player;
-import net.canarymod.api.world.World;
-import net.canarymod.api.world.blocks.Block;
-import net.canarymod.api.world.position.Location;
-import net.canarymod.api.world.position.Vector3D;
+import net.canarymod.api.world.position.Position;
 import net.canarymod.hook.player.BlockRightClickHook;
 import net.canarymod.logger.Logman;
-import net.minecraft.item.EnumDyeColor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class CommandHandler {
-  // origin is the spawn location on the world
-  private final Location origin;
-  private final Server server;
-  private final ServerWrapper serverWrapper;
   private final Logman logman;
   private final RemoteSession.Out out;
 
   private final ArrayDeque<BlockRightClickHook> blockHitQueue =
       new ArrayDeque<BlockRightClickHook>();
 
-  private Player attachedPlayer;
   private final Map<Pair<String, Integer>, Pair<Object, Method>>
       apiMethodNameAndParameterCountToApiObjectAndMethod =
       new LinkedHashMap<Pair<String, Integer>, Pair<Object, Method>>();
@@ -38,14 +26,11 @@ public class CommandHandler {
       apiMethodNameAcceptingRawArgStringToApiObjectAndMethod =
       new LinkedHashMap<String, Pair<Object, Method>>();
 
-  public CommandHandler(Server server, ServerWrapper serverWrapper, Logman logman,
-      RemoteSession.Out out) {
-    this.server = server;
-    this.serverWrapper = serverWrapper;
+  public CommandHandler(ServerWrapper serverWrapper, Logman logman, RemoteSession.Out out) {
     this.logman = logman;
     this.out = out;
-    this.origin = getSpawnLocation();
 
+    Position origin = serverWrapper.getSpawnPosition();
     registerApiMethods(new OriginalApi(origin, serverWrapper, blockHitQueue, logman));
     registerApiMethods(new ExtendedApi(origin, serverWrapper, logman));
   }
@@ -74,7 +59,7 @@ public class CommandHandler {
     String methodName = line.substring(0, line.indexOf("("));
     //split string into args, handles , inside " i.e. ","
     String rawArgStr = line.substring(line.indexOf("(") + 1, line.length() - 1);
-    String[] args = rawArgStr.equals("") ? new String[]{} : rawArgStr.split(",");
+    String[] args = rawArgStr.equals("") ? new String[] {} : rawArgStr.split(",");
     //System.out.println(methodName + ":" + Arrays.toString(args));
     handleCommand(methodName, args, rawArgStr);
   }
@@ -94,8 +79,7 @@ public class CommandHandler {
         apiObject = apiObjectAndMethod.getLeft();
         method = apiObjectAndMethod.getRight();
 
-        convertedArgs = new String[]{rawArgStr};
-
+        convertedArgs = new String[] {rawArgStr};
       } else if (apiMethodNameAndParameterCountToApiObjectAndMethod.containsKey(key)) {
         Pair<Object, Method> apiObjectAndMethod =
             apiMethodNameAndParameterCountToApiObjectAndMethod.get(key);
@@ -109,224 +93,23 @@ public class CommandHandler {
         if (method.getReturnType().equals(Void.TYPE)) {
           method.invoke(apiObject, convertedArgs);
         } else {
-          send(ApiIO.serializeResult(method.invoke(apiObject, convertedArgs)));
+          out.send(ApiIO.serializeResult(method.invoke(apiObject, convertedArgs)));
         }
         return;
       }
 
-      // get the server
-      Server server = getServer();
-
-      // get the world
-      World world = getWorld();
-
       logman.warn(c + " is not supported.");
-      send("Fail");
-
+      out.send("Fail");
     } catch (Exception e) {
 
       logman.warn("Error occured handling command");
       e.printStackTrace();
-      send("Fail");
+      out.send("Fail");
     }
-  }
-
-  public void send(Object a) {
-    out.send(a.toString());
-  }
-
-  public Server getServer() {
-    return server;
-  }
-
-  public World getWorld() {
-    return getServer().getWorldManager().getAllWorlds().iterator().next();
-  }
-
-  public Location getSpawnLocation() {
-    return getWorld().getSpawnLocation();
   }
 
   // add a block hit to the queue to be processed
   public void queueBlockHit(BlockRightClickHook hitHook) {
     blockHitQueue.add(hitHook);
-  }
-
-  // get the host player, i.e. the first player on the server
-  public Player getHostPlayer() {
-    List<Player> allPlayers = getServer().getPlayerList();
-    if (allPlayers.size() >= 1) {
-      return allPlayers.iterator().next();
-    }
-    return null;
-  }
-
-  // gets a named player, as opposed to the host player
-  public Player getNamedPlayer(String name) {
-    if (name == null) return null;
-    // TODO - change this to use getPlayer(name)
-    List<Player> allPlayers = getServer().getPlayerList();
-    for (int i = 0; i < allPlayers.size(); ++i) {
-      if (name.equals(allPlayers.get(i).getName())) {
-        return allPlayers.get(i);
-      }
-    }
-    return null;
-  }
-
-  //get entity by id - TODO to be compatible with the pi it should be changed to return an entity not a player...
-  public Player getEntity(int id) {
-    List<Player> allPlayers = getServer().getPlayerList();
-    for (int i = 0; i < allPlayers.size(); ++i) {
-      if (allPlayers.get(i).getID() == id) {
-        return allPlayers.get(i);
-      }
-    }
-    return null;
-  }
-
-  // create a cuboid of lots of blocks
-  private void setCuboid(Location pos1, Location pos2, short blockType, short data) {
-    int minX, maxX, minY, maxY, minZ, maxZ;
-    World world = pos1.getWorld();
-    minX = pos1.getBlockX() < pos2.getBlockX() ? pos1.getBlockX() : pos2.getBlockX();
-    maxX = pos1.getBlockX() >= pos2.getBlockX() ? pos1.getBlockX() : pos2.getBlockX();
-    minY = pos1.getBlockY() < pos2.getBlockY() ? pos1.getBlockY() : pos2.getBlockY();
-    maxY = pos1.getBlockY() >= pos2.getBlockY() ? pos1.getBlockY() : pos2.getBlockY();
-    minZ = pos1.getBlockZ() < pos2.getBlockZ() ? pos1.getBlockZ() : pos2.getBlockZ();
-    maxZ = pos1.getBlockZ() >= pos2.getBlockZ() ? pos1.getBlockZ() : pos2.getBlockZ();
-
-    for (int x = minX; x <= maxX; ++x) {
-      for (int z = minZ; z <= maxZ; ++z) {
-        for (int y = minY; y <= maxY; ++y) {
-          updateBlock(world, x, y, z, blockType, data);
-        }
-      }
-    }
-  }
-
-  // get a cuboid of lots of blocks
-  private String getBlocks(Location pos1, Location pos2) {
-    StringBuilder blockData = new StringBuilder();
-
-    int minX, maxX, minY, maxY, minZ, maxZ;
-    World world = pos1.getWorld();
-    minX = pos1.getBlockX() < pos2.getBlockX() ? pos1.getBlockX() : pos2.getBlockX();
-    maxX = pos1.getBlockX() >= pos2.getBlockX() ? pos1.getBlockX() : pos2.getBlockX();
-    minY = pos1.getBlockY() < pos2.getBlockY() ? pos1.getBlockY() : pos2.getBlockY();
-    maxY = pos1.getBlockY() >= pos2.getBlockY() ? pos1.getBlockY() : pos2.getBlockY();
-    minZ = pos1.getBlockZ() < pos2.getBlockZ() ? pos1.getBlockZ() : pos2.getBlockZ();
-    maxZ = pos1.getBlockZ() >= pos2.getBlockZ() ? pos1.getBlockZ() : pos2.getBlockZ();
-
-    for (int y = minY; y <= maxY; ++y) {
-      for (int x = minX; x <= maxX; ++x) {
-        for (int z = minZ; z <= maxZ; ++z) {
-          blockData.append(new Integer(world.getBlockAt(x, y, z).getTypeId()).toString() + ",");
-        }
-      }
-    }
-
-    return blockData.substring(0,
-        blockData.length() > 0 ? blockData.length() - 1 : 0);  // We don't want last comma
-  }
-
-  // updates a block
-  private void updateBlock(World world, Location loc, short blockType, short blockData) {
-    Block thisBlock = world.getBlockAt(loc);
-    updateBlock(thisBlock, blockType, blockData);
-  }
-
-  private void updateBlock(World world, int x, int y, int z, short blockType, short blockData) {
-    Block thisBlock = world.getBlockAt(x, y, z);
-    updateBlock(thisBlock, blockType, blockData);
-  }
-
-  private void updateBlock(Block thisBlock, short blockType, short blockData) {
-    // check to see if the block is different - otherwise leave it
-    if ((thisBlock.getTypeId() != blockType) || (thisBlock.getData() != blockData)) {
-      thisBlock.setTypeId(blockType);
-      if (blockData > 0) {
-        // TODO: will need to handle more types of "data"
-        thisBlock.setPropertyValue(thisBlock.getPropertyForName("color"), EnumDyeColor.b(blockData));
-      }
-      thisBlock.update();
-    }
-  }
-
-  // gets the current player
-  public Player getCurrentPlayer(String name) {
-    // if a named player is returned use that
-    Player player = getNamedPlayer(name);
-    // otherwise if there is an attached player for this session use that
-    if (player == null) {
-      player = attachedPlayer;
-      // otherwise go and get the host player and make that the attached player
-      if (player == null) {
-        player = getHostPlayer();
-        attachedPlayer = player;
-      }
-    }
-    return player;
-  }
-
-  public Location parseRelativeBlockLocation(Location origin, String xstr, String ystr,
-      String zstr) {
-    int x = (int) Double.parseDouble(xstr);
-    int y = (int) Double.parseDouble(ystr);
-    int z = (int) Double.parseDouble(zstr);
-    return new Location(getWorld(), origin.getBlockX() + x, origin.getBlockY() + y,
-        origin.getBlockZ() + z, 0f, 0f);
-  }
-
-  public Location parseRelativeLocation(String xstr, String ystr, String zstr) {
-    double x = Double.parseDouble(xstr);
-    double y = Double.parseDouble(ystr);
-    double z = Double.parseDouble(zstr);
-    return new Location(getWorld(), origin.getBlockX() + x, origin.getBlockY() + y,
-        origin.getBlockZ() + z, 0f, 0f);
-  }
-
-  public Location parseRelativeBlockLocation(String xstr, String ystr, String zstr, float pitch,
-      float yaw) {
-    Location loc = parseRelativeBlockLocation(origin, xstr, ystr, zstr);
-    loc.setPitch(pitch);
-    loc.setRotation(yaw);
-    return loc;
-  }
-
-  public Location parseRelativeLocation(String xstr, String ystr, String zstr, float pitch,
-      float yaw) {
-    Location loc = parseRelativeLocation(xstr, ystr, zstr);
-    loc.setPitch(pitch);
-    loc.setRotation(yaw);
-    return loc;
-  }
-
-  public String blockLocationToRelative(Location loc) {
-    return (loc.getBlockX() - origin.getBlockX())
-        + ","
-        + (loc.getBlockY() - origin.getBlockY())
-        + ","
-        +
-        (loc.getBlockZ() - origin.getBlockZ());
-  }
-
-  public String locationToRelative(Location loc) {
-    return (loc.getX() - origin.getX()) + "," + (loc.getY() - origin.getY()) + "," +
-        (loc.getZ() - origin.getZ());
-  }
-
-  // creates a unit vector from rotation and pitch
-  public Vector3D getDirection(Player player) {
-    double rotation = Math.toRadians(player.getLocation().getRotation());
-    double pitch = Math.toRadians(player.getLocation().getPitch());
-    double x = (Math.sin(rotation) * Math.cos(pitch)) * -1;
-    double y = Math.sin(pitch) * -1;
-    double z = Math.cos(rotation) * Math.cos(pitch);
-    return new Vector3D(x, y, z);
-  }
-
-  public RemoteSession.Out getOut() {
-    return out;
   }
 }

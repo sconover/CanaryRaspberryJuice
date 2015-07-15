@@ -15,244 +15,247 @@ import net.canarymod.logger.Logman;
 // Remote session class manages commands
 public class RemoteSession {
 
-	private final CommandHandler commandHandler;
+  private final CommandHandler commandHandler;
 
-	private Logman logman;
-	private Socket socket;
+  private Logman logman;
+  private Socket socket;
 
-	private BufferedReader in;
+  private BufferedReader in;
 
-	private BufferedWriter out;
-	
-	private Thread inThread;
-	
-	private Thread outThread;
+  private BufferedWriter out;
 
-	private ArrayDeque<String> inQueue = new ArrayDeque<String>();
+  private Thread inThread;
 
-	public boolean running = true;
+  private Thread outThread;
 
-	private int maxCommandsPerTick = 9000;
+  private ArrayDeque<String> inQueue = new ArrayDeque<String>();
 
-	private boolean closed = false;
-	
-	private final ToOutQueue toOutQueue;
+  public boolean running = true;
 
-	public static RemoteSession create(Server server, Logman logman, Socket socket) throws IOException {
-		ToOutQueue toOutQueue = new ToOutQueue(new ArrayDeque<String>());
-		RemoteSession remoteSession = new RemoteSession(
-				logman,
-				toOutQueue,
-				new CommandHandler(server, new ServerWrapper(server), logman,
-						toOutQueue),
-				socket);
-		remoteSession.init();
-		return remoteSession;
-	}
+  private int maxCommandsPerTick = 9000;
 
-	public RemoteSession(Logman logman, ToOutQueue toOutQueue, CommandHandler commandHandler, Socket socket) throws IOException {
-		this.logman = logman;
-		this.toOutQueue = toOutQueue;
-		this.commandHandler = commandHandler;
-		this.socket = socket;
-	}
+  private boolean closed = false;
 
-	public void init() throws IOException {
-		socket.setTcpNoDelay(true);
-		socket.setKeepAlive(true);
-		socket.setTrafficClass(0x10);
-		this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-		startThreads();
-		logman.info("Opened connection to" + socket.getRemoteSocketAddress() + ".");
-	}
+  private final ToOutQueue toOutQueue;
 
-	protected void startThreads() {
-		inThread = new Thread(new InputThread());
-		inThread.start();
-		outThread = new Thread(new OutputThread());
-		outThread.start();
-	}
+  public static RemoteSession create(Server server, Logman logman, Socket socket)
+      throws IOException {
+    ToOutQueue toOutQueue = new ToOutQueue(new ArrayDeque<String>());
+    RemoteSession remoteSession = new RemoteSession(
+        logman,
+        toOutQueue,
+        new CommandHandler(new ServerWrapper(server), logman, toOutQueue),
+        socket);
+    remoteSession.init();
+    return remoteSession;
+  }
 
- 	public Socket getSocket() {
-		return socket;
-	}
+  public RemoteSession(Logman logman, ToOutQueue toOutQueue, CommandHandler commandHandler,
+      Socket socket) throws IOException {
+    this.logman = logman;
+    this.toOutQueue = toOutQueue;
+    this.commandHandler = commandHandler;
+    this.socket = socket;
+  }
 
-	/** called from the server main thread */
-	public void tick() {
-		int processedCount = 0;
-		String message;
-		while ((message = inQueue.poll()) != null) {
-			commandHandler.handleLine(message);
-			processedCount++;
-			if (processedCount >= maxCommandsPerTick) {
-				logman.warn("Over " + maxCommandsPerTick +
-						" commands were queued - deferring " + inQueue.size() + " to next tick");
-				break;
-			}
-		}
+  public void init() throws IOException {
+    socket.setTcpNoDelay(true);
+    socket.setKeepAlive(true);
+    socket.setTrafficClass(0x10);
+    this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+    this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+    startThreads();
+    logman.info("Opened connection to" + socket.getRemoteSocketAddress() + ".");
+  }
 
-		if (!running && inQueue.size() <= 0) {
-			this.toOutQueue.setPendingRemoval();
-		}
-	}
+  protected void startThreads() {
+    inThread = new Thread(new InputThread());
+    inThread.start();
+    outThread = new Thread(new OutputThread());
+    outThread.start();
+  }
 
-	public void close() {
-		if (closed) return;
-		running = false;
-		this.toOutQueue.setPendingRemoval();
-		//wait for threads to stop
-		try {
-			inThread.join(2000);
-			outThread.join(2000);
-		} catch (InterruptedException e) {
-			logman.warn("Failed to stop in/out thread");
-			e.printStackTrace();
-		}
-		
-		//close socket
-		try {
-			socket.close();
-		} catch (Exception e) {
-			logman.warn("Failed to close socket");
-			e.printStackTrace();
-		}
+  public Socket getSocket() {
+    return socket;
+  }
 
-		closed = true;
-		logman.info("Closed connection to" + socket.getRemoteSocketAddress() + ".");
-	}
+  /** called from the server main thread */
+  public void tick() {
+    int processedCount = 0;
+    String message;
+    while ((message = inQueue.poll()) != null) {
+      commandHandler.handleLine(message);
+      processedCount++;
+      if (processedCount >= maxCommandsPerTick) {
+        logman.warn("Over " + maxCommandsPerTick +
+            " commands were queued - deferring " + inQueue.size() + " to next tick");
+        break;
+      }
+    }
 
-	public void kick(String reason) {
-		try {
-			out.write(reason);
-			out.flush();
-		} catch (Exception e) {
-		}
-		close();
-	}
+    if (!running && inQueue.size() <= 0) {
+      this.toOutQueue.setPendingRemoval();
+    }
+  }
 
-	/** socket listening thread */
-	private class InputThread implements Runnable {
-		public void run() {
-			logman.info("Starting input thread");
-			while (running) {
-				try {
-					String newLine = in.readLine();
-					//System.out.println(newLine);
-					if (newLine == null) {
-						running = false;
-					} else {
-						inQueue.add(newLine);
-						//System.out.println("Added to in queue");
-					}
-				} catch (Exception e) {
-					// if its running raise an error
-					if (running) {
-						e.printStackTrace();
-						running = false;
-					}
-				}
-			}
-			//close in buffer
-			try {
-				in.close();
-			} catch (Exception e) {
-				logman.warn("Failed to close in buffer");
-				e.printStackTrace();
-			}
-		}
-	}
+  public void close() {
+    if (closed) return;
+    running = false;
+    this.toOutQueue.setPendingRemoval();
+    //wait for threads to stop
+    try {
+      inThread.join(2000);
+      outThread.join(2000);
+    } catch (InterruptedException e) {
+      logman.warn("Failed to stop in/out thread");
+      e.printStackTrace();
+    }
 
-	private class OutputThread implements Runnable {
-		public void run() {
-			logman.info("Starting output thread");
-			while (running) {
-				try {
-					String line;
-					while((line = toOutQueue.poll()) != null) {
-						out.write(line);
-						out.write('\n');
-					}
-					out.flush();
-					Thread.yield();
-					Thread.sleep(1L);
-				} catch (Exception e) {
-					// if its still running raise an error
-					if (running) {
-						e.printStackTrace();
-						running = false;
-					}
-				}
-			}
-			//close out buffer
-			try {
-				out.close();
-			} catch (Exception e) {
-				logman.warn("Failed to close out buffer");
-				e.printStackTrace();
-			}
-		}
-	}
+    //close socket
+    try {
+      socket.close();
+    } catch (Exception e) {
+      logman.warn("Failed to close socket");
+      e.printStackTrace();
+    }
 
-	// turn block faces to numbers
-	public static int blockFaceToNotch(BlockFace face) {
-		switch (face) {
-		case BOTTOM:
-			return 0;
-		case TOP:
-			return 1;
-		case NORTH:
-			return 2;
-		case SOUTH:
-			return 3;
-		case WEST:
-			return 4;
-		case EAST:
-			return 5;
-		default:
-			return 7; // Good as anything here, but technically invalid
-		}
-	}
+    closed = true;
+    logman.info("Closed connection to" + socket.getRemoteSocketAddress() + ".");
+  }
 
-	// add a block hit to the queue to be processed
-	public void queueBlockHit(BlockRightClickHook hitHook) {
-		commandHandler.queueBlockHit(hitHook);
-	}
+  public void kick(String reason) {
+    try {
+      out.write(reason);
+      out.flush();
+    } catch (Exception e) {
+    }
+    close();
+  }
 
-	public boolean isPendingRemoval() {
-		return toOutQueue.isPendingRemoval();
-	}
+  /** socket listening thread */
+  private class InputThread implements Runnable {
+    public void run() {
+      logman.info("Starting input thread");
+      while (running) {
+        try {
+          String newLine = in.readLine();
+          //System.out.println(newLine);
+          if (newLine == null) {
+            running = false;
+          } else {
+            inQueue.add(newLine);
+            //System.out.println("Added to in queue");
+          }
+        } catch (Exception e) {
+          // if its running raise an error
+          if (running) {
+            e.printStackTrace();
+            running = false;
+          }
+        }
+      }
+      //close in buffer
+      try {
+        in.close();
+      } catch (Exception e) {
+        logman.warn("Failed to close in buffer");
+        e.printStackTrace();
+      }
+    }
+  }
 
-	public interface Out {
-		public void send(String str);
-	}
+  private class OutputThread implements Runnable {
+    public void run() {
+      logman.info("Starting output thread");
+      while (running) {
+        try {
+          String line;
+          while ((line = toOutQueue.poll()) != null) {
+            out.write(line);
+            out.write('\n');
+          }
+          out.flush();
+          Thread.yield();
+          Thread.sleep(1L);
+        } catch (Exception e) {
+          // if its still running raise an error
+          if (running) {
+            e.printStackTrace();
+            running = false;
+          }
+        }
+      }
+      //close out buffer
+      try {
+        out.close();
+      } catch (Exception e) {
+        logman.warn("Failed to close out buffer");
+        e.printStackTrace();
+      }
+    }
+  }
 
-	public static class ToOutQueue implements Out {
-		private final ArrayDeque<String> outQueue;
-		private boolean pendingRemoval = false;
+  //TODO: block face stuff is not working property. Tests as well.
 
-		public ToOutQueue(ArrayDeque<String> outQueue) {
-			this.outQueue = outQueue;
-			pendingRemoval = false;
-		}
+  // turn block faces to numbers
+  public static int blockFaceToNotch(BlockFace face) {
+    switch (face) {
+      case BOTTOM:
+        return 0;
+      case TOP:
+        return 1;
+      case NORTH:
+        return 2;
+      case SOUTH:
+        return 3;
+      case WEST:
+        return 4;
+      case EAST:
+        return 5;
+      default:
+        return 7; // Good as anything here, but technically invalid
+    }
+  }
 
-		public void setPendingRemoval() {
-			pendingRemoval = true;
-		}
+  // add a block hit to the queue to be processed
+  public void queueBlockHit(BlockRightClickHook hitHook) {
+    commandHandler.queueBlockHit(hitHook);
+  }
 
-		public boolean isPendingRemoval() {
-			return pendingRemoval;
-		}
+  public boolean isPendingRemoval() {
+    return toOutQueue.isPendingRemoval();
+  }
 
-		public String poll() {
-			return this.outQueue.poll();
-		}
+  public interface Out {
+    public void send(String str);
+  }
 
-		@Override public void send(String str) {
-			if (pendingRemoval) return;
-			synchronized(outQueue) {
-				outQueue.add(str);
-			}
-		}
-	}
+  public static class ToOutQueue implements Out {
+    private final ArrayDeque<String> outQueue;
+    private boolean pendingRemoval = false;
+
+    public ToOutQueue(ArrayDeque<String> outQueue) {
+      this.outQueue = outQueue;
+      pendingRemoval = false;
+    }
+
+    public void setPendingRemoval() {
+      pendingRemoval = true;
+    }
+
+    public boolean isPendingRemoval() {
+      return pendingRemoval;
+    }
+
+    public String poll() {
+      return this.outQueue.poll();
+    }
+
+    @Override public void send(String str) {
+      if (pendingRemoval) return;
+      synchronized (outQueue) {
+        outQueue.add(str);
+      }
+    }
+  }
 }
