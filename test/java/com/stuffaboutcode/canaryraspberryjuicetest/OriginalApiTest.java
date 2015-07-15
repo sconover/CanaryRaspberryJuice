@@ -445,4 +445,59 @@ public class OriginalApiTest extends InWorldTestSupport {
           getTestOut().sends.get(1));
     }
   }
+
+  @Test
+  public void test_player_setPos() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+
+      Position p = nextTestPosition("player.setPos");
+
+      Position pMid = new Position(p.getX() + 0.5f, p.getY() + 0.5f, p.getZ() + 0.5f);
+
+      // make the origin == p
+
+      setUpAtPlayerOrigin(pMid);
+
+      getServerWrapper().getFirstPlayer().setPitch(-74f);
+      getServerWrapper().getFirstPlayer().setRotation(89f);
+
+      // initial position
+
+      assertEquals(
+          new Position(
+              p.getX() + (double) PLAYER_PLACEMENT_X_OFFSET,
+              p.getY() + (double) PLAYER_PLACEMENT_Y_OFFSET,
+              p.getZ() + (double) PLAYER_PLACEMENT_Z_OFFSET),
+          getServerWrapper().getFirstPlayer().getPosition());
+
+
+      // move the player diagonally
+
+      getCommandHandler().handleLine(
+          String.format("player.setPos(%s,5.2,5.2,5.2)", getServerWrapper().getFirstPlayer().getName()));
+
+      assertEquals(
+          new Position(
+              p.getX() + 5.2d,
+              p.getY() + 5.2d,
+              p.getZ() + 5.2d),
+          getServerWrapper().getFirstPlayer().getPosition());
+
+      // make sure the pitch and yaw are maintained
+
+      assertEquals(-74, (int)getServerWrapper().getFirstPlayer().getPitch());
+      assertEquals(89, (int)getServerWrapper().getFirstPlayer().getRotation());
+
+      // when player name is blank, default to first player
+
+      getCommandHandler().handleLine("player.setPos(7.2,7.2,7.2)");
+
+      assertEquals(
+          new Position(
+              p.getX() + 7.2d,
+              p.getY() + 7.2d,
+              p.getZ() + 7.2d),
+          getServerWrapper().getFirstPlayer().getPosition());
+    }
+  }
 }
