@@ -349,6 +349,10 @@ public class OriginalApiTest extends InWorldTestSupport {
     }
   }
 
+  //TODO: "entity" methods were clearly intended to be for all entities, not just players.
+  //convert these tests to test non-player entities.
+  //then consider basing the player methods on entity methods.
+  
   @Test
   public void test_player_getTile() throws Exception {
     if (getServerWrapper().hasPlayers()) {
@@ -606,6 +610,184 @@ public class OriginalApiTest extends InWorldTestSupport {
       assertEquals(93, (int) Float.parseFloat(getTestOut().sends.get(1)));
     }
   }
+
+  @Test
+  public void test_entity_getTile() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+
+      Position p = nextTestPosition("entity.getTile");
+
+      getCommandHandler().handleLine(
+          String.format("entity.getTile(%d)", getServerWrapper().getFirstPlayer().getID()));
+
+      String expected = String.format("%d,%d,%d",
+          (int) p.getX() + PLAYER_PLACEMENT_X_OFFSET,
+          (int) p.getY() + PLAYER_PLACEMENT_Y_OFFSET,
+          (int) p.getZ() + PLAYER_PLACEMENT_Z_OFFSET);
+
+      assertEquals(Lists.newArrayList(expected), getTestOut().sends);
+    }
+  }
+
+  @Test
+  public void test_entity_setTile() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+
+      Position p = nextTestPosition("entity.setTile");
+
+      // make the origin == p
+
+      setUpAtPlayerOrigin(p);
+
+      getServerWrapper().getFirstPlayer().setPitch(-74f);
+      getServerWrapper().getFirstPlayer().setRotation(89f);
+
+      // initial position
+
+      assertEquals(
+          new Position(
+              (int) p.getX() + PLAYER_PLACEMENT_X_OFFSET,
+              (int) p.getY() + PLAYER_PLACEMENT_Y_OFFSET,
+              (int) p.getZ() + PLAYER_PLACEMENT_Z_OFFSET),
+          getServerWrapper().getFirstPlayer().getPosition());
+
+      // move the entity diagonally
+
+      getCommandHandler().handleLine(
+          String.format("entity.setTile(%d,5,5,5)", getServerWrapper().getFirstPlayer().getID()));
+
+      assertEquals(
+          new Position(
+              (int) p.getX() + 5,
+              (int) p.getY() + 5,
+              (int) p.getZ() + 5),
+          getServerWrapper().getFirstPlayer().getPosition());
+
+      // make sure the pitch and yaw are maintained
+
+      assertEquals(-74, (int) getServerWrapper().getFirstPlayer().getPitch());
+      assertEquals(89, (int) getServerWrapper().getFirstPlayer().getRotation());
+    }
+  }
+
+  @Test
+  public void test_entity_getPos() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+
+      Position p = nextTestPosition("entity.getPos");
+
+      // make the origin == p
+
+      setUpAtPlayerOrigin(p);
+
+      // entity.getPos position result is relative to the origin (spawn location)
+
+      getCommandHandler().handleLine(
+          String.format("entity.getPos(%d)", getServerWrapper().getFirstPlayer().getID()));
+
+      assertEquals(1, getTestOut().sends.size());
+      assertEquals(
+          String.format("%.1f,%.1f,%.1f",
+              (float) PLAYER_PLACEMENT_X_OFFSET,
+              (float) PLAYER_PLACEMENT_Y_OFFSET,
+              (float) PLAYER_PLACEMENT_Z_OFFSET),
+          getTestOut().sends.get(0));
+    }
+  }
+
+  @Test
+  public void test_entity_setPos() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+
+      Position p = nextTestPosition("entity.setPos");
+
+      Position pMid = new Position(p.getX() + 0.5f, p.getY() + 0.5f, p.getZ() + 0.5f);
+
+      // make the origin == p
+
+      setUpAtPlayerOrigin(pMid);
+
+      getServerWrapper().getFirstPlayer().setPitch(-74f);
+      getServerWrapper().getFirstPlayer().setRotation(89f);
+
+      // initial position
+
+      assertEquals(
+          new Position(
+              p.getX() + (double) PLAYER_PLACEMENT_X_OFFSET,
+              p.getY() + (double) PLAYER_PLACEMENT_Y_OFFSET,
+              p.getZ() + (double) PLAYER_PLACEMENT_Z_OFFSET),
+          getServerWrapper().getFirstPlayer().getPosition());
+
+      // move the entity diagonally
+
+      getCommandHandler().handleLine(
+          String.format("entity.setPos(%d,5.2,5.2,5.2)",
+              getServerWrapper().getFirstPlayer().getID()));
+
+      assertEquals(
+          new Position(
+              p.getX() + 5.2d,
+              p.getY() + 5.2d,
+              p.getZ() + 5.2d),
+          getServerWrapper().getFirstPlayer().getPosition());
+
+      // make sure the pitch and yaw are maintained
+
+      assertEquals(-74, (int) getServerWrapper().getFirstPlayer().getPitch());
+      assertEquals(89, (int) getServerWrapper().getFirstPlayer().getRotation());
+    }
+  }
+
+  @Test
+  public void test_entity_getDirection() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+
+      getServerWrapper().getFirstPlayer().setPitch(47f);
+      getServerWrapper().getFirstPlayer().setRotation(97f);
+
+      getCommandHandler().handleLine(
+          String.format("entity.getDirection(%d)", getServerWrapper().getFirstPlayer().getID()));
+
+      assertEquals(1, getTestOut().sends.size());
+
+      String[] parts = getTestOut().sends.get(0).split(",", 3);
+      double vecX = Double.parseDouble(parts[0]);
+      double vecY = Double.parseDouble(parts[1]);
+      double vecZ = Double.parseDouble(parts[2]);
+
+      PitchAndRotation pitchAndRotation = vectorToPitchAndRotation(vecX, vecY, vecZ);
+      assertEquals(47, (int) pitchAndRotation.pitch);
+      assertEquals(97, (int) pitchAndRotation.rotation);
+    }
+  }
+
+  @Test
+  public void test_entity_getPitch() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+      getServerWrapper().getFirstPlayer().setPitch(49f);
+
+      getCommandHandler().handleLine(
+          String.format("entity.getPitch(%d)", getServerWrapper().getFirstPlayer().getID()));
+
+      assertEquals(1, getTestOut().sends.size());
+      assertEquals(49, (int) Float.parseFloat(getTestOut().sends.get(0)));
+    }
+  }
+
+  @Test
+  public void test_entity_getRotation() throws Exception {
+    if (getServerWrapper().hasPlayers()) {
+      getServerWrapper().getFirstPlayer().setRotation(93f);
+
+      getCommandHandler().handleLine(
+          String.format("entity.getRotation(%d)", getServerWrapper().getFirstPlayer().getID()));
+
+      assertEquals(1, getTestOut().sends.size());
+      assertEquals(93, (int) Float.parseFloat(getTestOut().sends.get(0)));
+    }
+  }
+
 
   static class PitchAndRotation {
     public final double pitch;
